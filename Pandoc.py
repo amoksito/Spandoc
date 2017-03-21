@@ -180,10 +180,8 @@ class PandocCommand(sublime_plugin.TextCommand):
 
         # handle pandoc errors
         if error:
-            sublime.error_message('\n\n'.join([
-                'Error when running:',
-                ' '.join(cmd),
-                error.decode('utf-8').strip()]))
+            sublime.error_message('\n\n'.join(['Error when running:', ' '.join(cmd), error.decode('utf-8').strip()]))
+            # print('\n\n'.join(['Error when running:', ' '.join(cmd), error.decode('utf-8').strip()]))  # just display errors in the console windows
             return
 
         # if write to file, open
