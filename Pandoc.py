@@ -175,7 +175,7 @@ class PandocCommand(sublime_plugin.TextCommand):
 
 
     def pass_to_pandoc(self, cmd, working_dir, contents, oformat, transformation, output_path):
-        process = subprocess.Popen(cmd, shell=False, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=working_dir)
+        process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=working_dir)
         result, error = process.communicate(contents.encode('utf-8'))  # always waits for the output (buffering). But this is not a problem in a threaded enviroment like sublime.set_timeout_async!
 
         # handle pandoc errors
