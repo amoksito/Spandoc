@@ -185,17 +185,17 @@ class PandocCommand(sublime_plugin.TextCommand):
             return
 
         # if write to file, open
-        if oformat is not None and oformat in _s('pandoc-format-file'):
-            try:
-                if sublime.platform() == 'osx':
-                    subprocess.call(["open", output_path])
-                elif sublime.platform() == 'windows':
-                    os.startfile(output_path)
-                elif os.name == 'posix':
-                    subprocess.call(('xdg-open', output_path))
-            except:
-                sublime.message_dialog('Wrote to file ' + output_path)
-            return
+        # if oformat is not None and oformat in _s('pandoc-format-file'):
+        #     try:
+        #         if sublime.platform() == 'osx':
+        #             subprocess.call(["open", output_path])
+        #         elif sublime.platform() == 'windows':
+        #             os.startfile(output_path)
+        #         elif os.name == 'posix':
+        #             subprocess.call(('xdg-open', output_path))
+        #     except:
+        #         sublime.message_dialog('Wrote to file ' + output_path)
+        #     return
 
         # write to buffer
         if result:
@@ -213,6 +213,8 @@ class PandocCommand(sublime_plugin.TextCommand):
 
             view.set_syntax_file(transformation['syntax_file'])
 
+        # Output Status message done:
+        sublime.status_message("🚩🚩🚩 Pandoc DONE 🚩🚩🚩")
 
 def _find_binary(name, default=None):
     '''Returns a configure path or looks for an executable on the system path.
