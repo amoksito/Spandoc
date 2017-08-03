@@ -90,7 +90,7 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
         picked_transformation = self.transformation_list[i]
 
         # execute the pandoc command with passing the wanted/picked transformation
-        self.window.active_view().run_command('pandoc', {'transformation': picked_transformation })
+        self.window.run_command('pandoc', {'transformation': picked_transformation })
 
 
 class BuildPandocCommand(sublime_plugin.WindowCommand):
@@ -103,11 +103,14 @@ class BuildPandocCommand(sublime_plugin.WindowCommand):
 
 
 
-class PandocCommand(sublime_plugin.TextCommand):
+class PandocCommand(sublime_plugin.WindowCommand):
 
     '''Transforms using Pandoc.'''
 
-    def run(self, edit, transformation):
+    def run(self, transformation):
+
+        # returns the window object
+        view = self.window.active_view()
 
         # get the user settings:
         settings = get_user_settings()
@@ -116,8 +119,8 @@ class PandocCommand(sublime_plugin.TextCommand):
         transformation = settings['transformations'][transformation]
 
         # string to work with
-        region = sublime.Region(0, self.view.size())
-        contents = self.view.substr(region)
+        region = sublime.Region(0, view.size())
+        contents = view.substr(region)
 
         # pandoc executable
         binary_name = 'pandoc.exe' if sublime.platform() == 'windows' else 'pandoc'
@@ -129,7 +132,7 @@ class PandocCommand(sublime_plugin.TextCommand):
         # from format
         score = 0
         for scope, c_iformat in transformation['scope'].items():
-            c_score = self.view.score_selector(0, scope)
+            c_score = view.score_selector(0, scope)
             if c_score <= score:
                 continue
             score = c_score
@@ -164,7 +167,7 @@ class PandocCommand(sublime_plugin.TextCommand):
             argslocal = transformation['out-local']
 
         # get current file path
-        current_file_path = self.view.file_name()
+        current_file_path = view.file_name()
         if current_file_path:
             working_dir = os.path.dirname(current_file_path)
             file_name = os.path.splitext(current_file_path)[0]
