@@ -45,17 +45,17 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
     def run(self):
 
         # get the user settings:
-        settings = get_user_settings()
+        settings = get_user_settings(self.window)
 
-        self.transformation_list = self.get_transformation_list(settings)
+        self.transformation_list = self.get_transformation_list(settings, self.window)
         self.window.show_quick_panel(self.transformation_list, self.picked_transformation)
 
 
-    def get_transformation_list(self, settings):
+    def get_transformation_list(self, settings, window):
         '''Generates a ranked list of available transformations.'''
 
-        # returns the currently edited view:
-        view = self.window.active_view()
+        # returns the currently edited view.
+        view = window.active_view()
 
         # score the transformations and rank them
         ranked = {}
@@ -113,7 +113,7 @@ class PandocCommand(sublime_plugin.WindowCommand):
         view = self.window.active_view()
 
         # get the user settings:
-        settings = get_user_settings()
+        settings = get_user_settings(self.window)
 
         # get all the items from picked transformation out of the settings
         transformation = settings['transformations'][transformation]
@@ -264,7 +264,7 @@ def _find_binary(name, default=None):
     return None
 
 
-def get_user_settings():
+def get_user_settings(window):
     '''Return the default settings merged with the user's settings.'''
 
     settings = sublime.load_settings('Pandoc.sublime-settings')
