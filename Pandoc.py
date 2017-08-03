@@ -54,7 +54,7 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
 
         # hash of transformation ranks
         ranked = {}
-        for label, settings in _s('transformations').items():
+        for label, settings in merge_user_settings('transformations').items():
             for scope in settings['scope'].keys():
                 score = view.score_selector(0, scope)
                 if not score:
@@ -78,7 +78,7 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
     def transform(self, i):
         if i == -1:
             return
-        transformation = _s('transformations')[self.options[i]]
+        transformation = merge_user_settings('transformations')[self.options[i]]
         self.window.active_view().run_command('pandoc', {
             'transformation': transformation
         })
@@ -88,7 +88,7 @@ class BuildPandocCommand(sublime_plugin.WindowCommand):
 
     def run(self, transformation):
 
-        transformation = _s('transformations')[transformation]
+        transformation = merge_user_settings('transformations')[transformation]
         self.window.active_view().run_command('pandoc', {'transformation': transformation })
 
 
@@ -105,7 +105,7 @@ class PandocCommand(sublime_plugin.TextCommand):
 
         # pandoc executable
         binary_name = 'pandoc.exe' if sublime.platform() == 'windows' else 'pandoc'
-        pandoc = _find_binary(binary_name, _s('pandoc-path'))
+        pandoc = _find_binary(binary_name, merge_user_settings('pandoc-path'))
         if pandoc is None:
             return
         cmd = [pandoc]
@@ -158,7 +158,7 @@ class PandocCommand(sublime_plugin.TextCommand):
 
         # if write to file, add -o if necessary, set file path to output_path
         output_path = None
-        if oformat is not None and oformat in _s('pandoc-format-file'):
+        if oformat is not None and oformat in merge_user_settings('pandoc-format-file'):
             output_path = args.get(short=['o'], long=['output'])
             if output_path is None:
                 # note the file extension matches the pandoc format name
@@ -194,7 +194,7 @@ class PandocCommand(sublime_plugin.TextCommand):
             return
 
         # if write to file, open
-        # if oformat is not None and oformat in _s('pandoc-format-file'):
+        # if oformat is not None and oformat in merge_user_settings('pandoc-format-file'):
         #     try:
         #         if sublime.platform() == 'osx':
         #             subprocess.call(["open", output_path])
@@ -245,12 +245,7 @@ def _find_binary(name, default=None):
     return None
 
 
-def _s(key):
-    '''Convenience function for getting the setting dict.'''
-    return merge_user_settings()[key]
-
-
-def merge_user_settings():
+def merge_user_settings(key, working_dir="None"):
     '''Return the default settings merged with the user's settings.'''
 
     settings = sublime.load_settings('Pandoc.sublime-settings')
@@ -273,7 +268,7 @@ def merge_user_settings():
         # merge all other keys
         default.update(user)
 
-    return default
+    return default[key]
 
 
 def _c(item):
