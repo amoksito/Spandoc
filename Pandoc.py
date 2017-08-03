@@ -97,6 +97,8 @@ class BuildPandocCommand(sublime_plugin.WindowCommand):
 
     def run(self, transformation):
 
+        # you need a BuildPandocCommand and you execute the PandocCommand directly with the build_system and passing transformation,
+        # because  it must be a Sublime WindowCommand and no TextCommand like it is in the PandocCommand
         self.window.active_view().run_command('pandoc', {'transformation': transformation })
 
 
