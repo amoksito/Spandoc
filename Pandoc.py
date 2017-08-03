@@ -44,11 +44,9 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
 
     def run(self):
         if self.window.active_view():
-            self.window.show_quick_panel(
-                self.transformations(),
-                self.transform)
+            self.window.show_quick_panel(self.get_transformations(), self.done_selected)
 
-    def transformations(self):
+    def get_transformations(self):
         '''Generates a ranked list of available transformations.'''
         view = self.window.active_view()
 
@@ -75,7 +73,7 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
 
         return self.options
 
-    def transform(self, i):
+    def done_selected(self, i):
         if i == -1:
             return
         transformation = merge_user_settings('transformations')[self.options[i]]
@@ -247,6 +245,8 @@ def _find_binary(name, default=None):
 
 def merge_user_settings(key, working_dir="None"):
     '''Return the default settings merged with the user's settings.'''
+
+    print("************ inside merge_user_settings *****************")
 
     settings = sublime.load_settings('Pandoc.sublime-settings')
     default = settings.get('default', {})
