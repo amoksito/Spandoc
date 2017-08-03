@@ -61,8 +61,11 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
 
     def run(self):
 
+        # return currently edited view, dir and filename from the window
+        view, working_dir, file_name = get_current(self.window)
+
         # get the user settings:
-        settings = get_user_settings(self.window)
+        settings = get_user_settings(view, working_dir, file_name)
 
         self.transformation_list = self.get_transformation_list(settings, self.window)
         self.window.show_quick_panel(self.transformation_list, self.picked_transformation)
@@ -115,7 +118,7 @@ class BuildPandocCommand(sublime_plugin.WindowCommand):
     def run(self, transformation):
 
         # you need a BuildPandocCommand and you execute the PandocCommand directly with the build_system and passing transformation,
-        # because  it must be a Sublime WindowCommand and no TextCommand like it is in the PandocCommand
+        # because it must be a Sublime WindowCommand and no TextCommand like it is in the PandocCommand
         self.window.active_view().run_command('pandoc', {'transformation': transformation })
 
 
@@ -126,20 +129,11 @@ class PandocCommand(sublime_plugin.WindowCommand):
 
     def run(self, transformation):
 
-        # returns the window object
-        view = self.window.active_view()
-
-        # get current file path
-        current_file_path = view.file_name()
-        if current_file_path:
-            working_dir = os.path.dirname(current_file_path)
-            file_name = os.path.splitext(current_file_path)[0]
-        else:
-            working_dir = None
-            file_name = None
+        # return currently edited view, dir and filename from the window
+        view, working_dir, file_name = get_current(self.window)
 
         # get the user settings:
-        settings = get_user_settings(self.window, working_dir, file_name)
+        settings = get_user_settings(view, working_dir, file_name)
 
         # get all the items from picked transformation out of the settings
         transformation = settings['transformations'][transformation]
@@ -281,14 +275,48 @@ def _find_binary(name, default=None):
     return None
 
 
-def get_user_settings(window, working_dir=None, file_name=None):
-    '''Return the default settings merged with the user's settings.'''
-
+def get_current(window):
 
     # returns the currently edited view.
     view = window.active_view()
 
-    # configLoc = walkIncludes("pandoc-config.json", working_dir, window)
+    # get current file path:
+    current_file_path = view.file_name()
+    if current_file_path:
+        working_dir = os.path.dirname(current_file_path)
+        file_name = os.path.splitext(current_file_path)[0]
+    else:
+        working_dir = None
+        file_name = None
+
+    return (view, working_dir, file_name)
+
+
+def get_user_settings(view, working_dir=None, file_name=None):
+    '''Return the default settings merged with the user's settings.'''
+
+
+    configLoc = walkIncludes("pandoc-config.json", working_dir, view.window())
+    if configLoc:
+        try:
+            f = open(configLoc, "r")
+        except IOError as e:
+            sublime.status_message("Error: pandoc-config exists, but could not be read.")
+            err("Pandown Exception: " + str(e))
+            f.close()
+        else:
+            pCommentedStr = f.read()
+            f.close()
+            pStr = minify_json.json_minify(pCommentedStr)
+            try:
+                p = json.loads(pStr)
+            except (KeyError, ValueError) as e:
+                sublime.status_message("JSON Error: Cannot parse pandoc-config. See console for details.")
+                err("Pandown Exception: " + str(e))
+                return None
+            if "default" in p:
+                pArg = p["default"]
+                p = pArg
 
     settings = sublime.load_settings('Pandoc.sublime-settings')
     default = settings.get('default', {})
@@ -365,18 +393,19 @@ def walkIncludes(lookFor, working_dir, window=None, prepend=None):
                 else:
                     checkDIR = os.path.abspath(os.path.join(checkDIR, os.path.pardir))
 
+    # for now: disabled:
     # Are there no paths to check?
-    if self.includes_paths_len == 0 and lookFor != "pandoc-config.json":
-        debug("No includes paths to check. Returning the input for Pandoc to handle.")
-        return prepend + lookFor if prepend else lookFor
-    # Is the file in the includes_paths?
-    for pathToCheck in self.includes_paths:
-        pathToCheck = os.path.expanduser(pathToCheck)
-        pathToCheck = os.path.abspath(pathToCheck)
-        fileToCheck = os.path.join(pathToCheck, lookFor)
-        if os.path.isfile(fileToCheck):
-            debug("It's in the includes paths! Returning: " + fileToCheck)
-            return prepend + fileToCheck if prepend else fileToCheck
+    # if self.includes_paths_len == 0 and lookFor != "pandoc-config.json":
+    #     debug("No includes paths to check. Returning the input for Pandoc to handle.")
+    #     return prepend + lookFor if prepend else lookFor
+    # # Is the file in the includes_paths?
+    # for pathToCheck in self.includes_paths:
+    #     pathToCheck = os.path.expanduser(pathToCheck)
+    #     pathToCheck = os.path.abspath(pathToCheck)
+    #     fileToCheck = os.path.join(pathToCheck, lookFor)
+    #     if os.path.isfile(fileToCheck):
+    #         debug("It's in the includes paths! Returning: " + fileToCheck)
+    #         return prepend + fileToCheck if prepend else fileToCheck
 
     # If the script was checking for a pandoc-config.json, return None.
     if lookFor == "pandoc-config.json":
