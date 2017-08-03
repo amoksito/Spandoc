@@ -112,8 +112,17 @@ class PandocCommand(sublime_plugin.WindowCommand):
         # returns the window object
         view = self.window.active_view()
 
+        # get current file path
+        current_file_path = view.file_name()
+        if current_file_path:
+            working_dir = os.path.dirname(current_file_path)
+            file_name = os.path.splitext(current_file_path)[0]
+        else:
+            working_dir = None
+            file_name = None
+
         # get the user settings:
-        settings = get_user_settings(self.window)
+        settings = get_user_settings(self.window, working_dir, file_name)
 
         # get all the items from picked transformation out of the settings
         transformation = settings['transformations'][transformation]
@@ -165,15 +174,6 @@ class PandocCommand(sublime_plugin.WindowCommand):
             argslocal = None
         else:
             argslocal = transformation['out-local']
-
-        # get current file path
-        current_file_path = view.file_name()
-        if current_file_path:
-            working_dir = os.path.dirname(current_file_path)
-            file_name = os.path.splitext(current_file_path)[0]
-        else:
-            working_dir = None
-            file_name = None
 
         # if write to file, add -o if necessary, set file path to output_path
         output_path = None
@@ -264,8 +264,12 @@ def _find_binary(name, default=None):
     return None
 
 
-def get_user_settings(window):
+def get_user_settings(window, working_dir=None, file_name=None):
     '''Return the default settings merged with the user's settings.'''
+
+
+    # returns the currently edited view.
+    view = window.active_view()
 
     settings = sublime.load_settings('Pandoc.sublime-settings')
     default = settings.get('default', {})
