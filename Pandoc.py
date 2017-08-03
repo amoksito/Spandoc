@@ -43,17 +43,24 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
     options = []
 
     def run(self):
-        if self.window.active_view():
-            self.window.show_quick_panel(self.get_transformations(), self.done_selected)
 
-    def get_transformations(self):
+        # get the user settings:
+        settings = get_user_settings()
+
+        self.transformation_list = self.get_transformation_list(settings)
+        self.window.show_quick_panel(self.transformation_list, self.picked_transformation)
+
+
+    def get_transformation_list(self, settings):
         '''Generates a ranked list of available transformations.'''
+
+        # returns the currently edited view:
         view = self.window.active_view()
 
-        # hash of transformation ranks
+        # score the transformations and rank them
         ranked = {}
-        for label, settings in merge_user_settings('transformations').items():
-            for scope in settings['scope'].keys():
+        for label, setting in settings['transformations'].items():
+            for scope in setting['scope'].keys():
                 score = view.score_selector(0, scope)
                 if not score:
                     continue
@@ -73,20 +80,23 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
 
         return self.options
 
-    def done_selected(self, i):
+
+    def picked_transformation(self, i):
+        ''' pass the name of the picked_transformation to the pandoc command and execute'''
         if i == -1:
             return
-        transformation = merge_user_settings('transformations')[self.options[i]]
-        self.window.active_view().run_command('pandoc', {
-            'transformation': transformation
-        })
+
+        # get the name of the picked_transformation from the selected item "i":
+        picked_transformation = self.transformation_list[i]
+
+        # execute the pandoc command with passing the wanted/picked transformation
+        self.window.active_view().run_command('pandoc', {'transformation': picked_transformation })
 
 
 class BuildPandocCommand(sublime_plugin.WindowCommand):
 
     def run(self, transformation):
 
-        transformation = merge_user_settings('transformations')[transformation]
         self.window.active_view().run_command('pandoc', {'transformation': transformation })
 
 
@@ -97,13 +107,19 @@ class PandocCommand(sublime_plugin.TextCommand):
 
     def run(self, edit, transformation):
 
+        # get the user settings:
+        settings = get_user_settings()
+
+        # get all the items from picked transformation out of the settings
+        transformation = settings['transformations'][transformation]
+
         # string to work with
         region = sublime.Region(0, self.view.size())
         contents = self.view.substr(region)
 
         # pandoc executable
         binary_name = 'pandoc.exe' if sublime.platform() == 'windows' else 'pandoc'
-        pandoc = _find_binary(binary_name, merge_user_settings('pandoc-path'))
+        pandoc = _find_binary(binary_name, settings['pandoc-path'])
         if pandoc is None:
             return
         cmd = [pandoc]
@@ -156,7 +172,7 @@ class PandocCommand(sublime_plugin.TextCommand):
 
         # if write to file, add -o if necessary, set file path to output_path
         output_path = None
-        if oformat is not None and oformat in merge_user_settings('pandoc-format-file'):
+        if oformat is not None and oformat in settings['pandoc-format-file']:
             output_path = args.get(short=['o'], long=['output'])
             if output_path is None:
                 # note the file extension matches the pandoc format name
@@ -192,7 +208,7 @@ class PandocCommand(sublime_plugin.TextCommand):
             return
 
         # if write to file, open
-        # if oformat is not None and oformat in merge_user_settings('pandoc-format-file'):
+        # if oformat is not None and oformat in get_user_settings('pandoc-format-file'):
         #     try:
         #         if sublime.platform() == 'osx':
         #             subprocess.call(["open", output_path])
@@ -243,10 +259,8 @@ def _find_binary(name, default=None):
     return None
 
 
-def merge_user_settings(key, working_dir="None"):
+def get_user_settings():
     '''Return the default settings merged with the user's settings.'''
-
-    print("************ inside merge_user_settings *****************")
 
     settings = sublime.load_settings('Pandoc.sublime-settings')
     default = settings.get('default', {})
@@ -268,7 +282,7 @@ def merge_user_settings(key, working_dir="None"):
         # merge all other keys
         default.update(user)
 
-    return default[key]
+    return default
 
 
 def _c(item):
