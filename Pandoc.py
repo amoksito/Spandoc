@@ -33,6 +33,23 @@ try:
     from.Edit import Edit as Edit
 except:
     from Edit import Edit as Edit
+__ST3 = int(sublime.version()) >= 3000
+import shutil
+import json
+if __ST3:
+    import Pandown.minify_json as minify_json
+    from Pandown.pandownCriticPreprocessor import *
+else:
+    import minify_json
+    from pandownCriticPreprocessor import *
+
+def debug(theMessage):
+
+    # if DEBUG_MODE:
+    print("[Sublime-Pandoc: " + str(theMessage) + "]")
+
+def err(e):
+    print("[Sublime-Pandoc ERRROR: " + str(e) + "]")
 
 class PromptPandocCommand(sublime_plugin.WindowCommand):
 
@@ -271,6 +288,8 @@ def get_user_settings(window, working_dir=None, file_name=None):
     # returns the currently edited view.
     view = window.active_view()
 
+    # configLoc = walkIncludes("pandoc-config.json", working_dir, window)
+
     settings = sublime.load_settings('Pandoc.sublime-settings')
     default = settings.get('default', {})
     user = settings.get('user', {})
@@ -292,6 +311,86 @@ def get_user_settings(window, working_dir=None, file_name=None):
         default.update(user)
 
     return default
+
+
+
+def walkIncludes(lookFor, working_dir, window=None, prepend=None):
+    '''
+    Check the includes_paths, then the project hierarchy, for the file to include,
+    but only if we don't already have a path.
+    Order of preference should be: working DIR, project DIRs, then includes_paths,
+    then finally giving up and passing the filename to Pandoc.
+    '''
+
+    debug("Looking for " + lookFor)
+    # Did the user pass a specific file?
+    tryAbs = os.path.abspath(os.path.expanduser(lookFor))
+    if os.path.isfile(tryAbs):
+        debug("It's a path! Returning.")
+        return prepend + tryAbs if prepend else tryAbs
+
+    # Is the file in the current build directory?
+    tryWorking = os.path.join(working_dir, lookFor)
+    if os.path.exists(tryWorking):
+        debug("It's in the build directory! Returning.")
+        return prepend + tryWorking if prepend else tryWorking
+
+    # Is the file anywhere in the project hierarchy?
+    # if window
+    allFolders = window.folders()
+    debug("allFolders: " + str(allFolders))
+    if len(allFolders) > 0:
+        topLevel = ""
+        (garbage, localName) = os.path.split(working_dir)
+        for folder in allFolders:
+            for root, dirs, files in os.walk(folder, topdown=False):
+                (garbage, rootTail) = os.path.split(root)
+                if rootTail == localName:
+                    topLevel = root
+                for name in dirs:
+                    debug("name: " + name)
+                    if name == localName:
+                        topLevel = folder
+        debug("topLevel: " + topLevel)
+        checkDIR = working_dir
+        debug("Initial checkDIR: " + checkDIR)
+        if topLevel:
+            while True:
+                fileToCheck = os.path.join(checkDIR, lookFor)
+                if os.path.exists(fileToCheck):
+                    debug("It's in the project! Returning %s." % fileToCheck)
+                    return prepend + fileToCheck if prepend else fileToCheck
+                if checkDIR == topLevel:
+                    break
+                else:
+                    checkDIR = os.path.abspath(os.path.join(checkDIR, os.path.pardir))
+
+    # Are there no paths to check?
+    if self.includes_paths_len == 0 and lookFor != "pandoc-config.json":
+        debug("No includes paths to check. Returning the input for Pandoc to handle.")
+        return prepend + lookFor if prepend else lookFor
+    # Is the file in the includes_paths?
+    for pathToCheck in self.includes_paths:
+        pathToCheck = os.path.expanduser(pathToCheck)
+        pathToCheck = os.path.abspath(pathToCheck)
+        fileToCheck = os.path.join(pathToCheck, lookFor)
+        if os.path.isfile(fileToCheck):
+            debug("It's in the includes paths! Returning: " + fileToCheck)
+            return prepend + fileToCheck if prepend else fileToCheck
+
+    # If the script was checking for a pandoc-config.json, return None.
+    if lookFor == "pandoc-config.json":
+        debug("Couldn't find config file in project path.")
+        return None
+    else:
+        # The file wasn't anywhere, so let Pandoc handle it.
+        debug("Can't find %s. Letting Pandoc deal with it." % lookFor)
+        return prepend + lookFor if prepend else lookFor
+
+    sublime.error_message("Fatal error looking for {0}".format(lookFor))
+    return None
+
+
 
 
 def _c(item):
