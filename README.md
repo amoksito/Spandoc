@@ -39,7 +39,7 @@ The `Spandoc` command opens a command palette and lists the defined transformati
 #### Spandoc: Create Config
 Internal command name: `spandoc_create_config`
 
-This command creates the `folder settings file`. It will copy either the `user settings file` or the `default settings file` to the folder within the currently edited document.
+This command creates the *folder settings file*. It will copy either the *user settings file* or the *default settings file* to the folder within the currently edited document.
 
 
 ### Sublime build system
@@ -62,11 +62,11 @@ Listed in reverse precedence: Folder settings overwrite User settings overwrite 
 
 ## Configuring
 
-It is advised not to alter the `default settings file`, because on every new update it'll get overwritten. Copy the `default settings file` to the `user settings file`. Both can be found via the application menu, go to `Preferences -> Package Settings -> Spandoc`.
+It is advised not to alter the *default settings file*, because on every new update it'll get overwritten. Copy the *default settings file* to the *user settings file*. Both can be found via the application menu, go to `Preferences -> Package Settings -> Spandoc`.
 
-In the `user settings file` you need to configure the path to the Pandoc executable. This can be done with the `pandoc-path` parameter. See the `default settings file` for default locations. 
+In the *user settings file* you need to configure the path to the Pandoc executable. This can be done with the `pandoc-path` parameter. See the *default settings file* for default locations. 
 
-There are 2 possible top level settings keys, `user` and `default`. If you use `default` in your `user settings file`, the default settings will be overwritten, but if you use `user` your settings will be merged into the default settings.
+There are 2 possible top level settings keys, `user` and `default`. If you use `default` in your *user settings file*, the default settings will be overwritten, but if you use `user` your settings will be merged into the default settings.
 
 With the `transformations` you define an output format for Pandoc. Every transformation needs at least:
 
@@ -76,7 +76,7 @@ With the `transformations` you define an output format for Pandoc. Every transfo
 
 The transformation label is only a Name for the transformation. This name is for example displayed in the command palette and will be always used to choose the transformation. The `scope` array decides if the transformation can be applied (it is in fact a `--from` parameter). Maybe it is more reasonable to just take the syntax of the currently edited file and not the scope under the cursor… The `--to` parameter, which must be inside the `pandoc-arguments` array is the `--to` parameter for Pandoc. Because of that it must follow the [naming rules](http://pandoc.org/MANUAL.html#options) by Pandoc, but propably it should have a similar name as the transformation label.
 
-__Every other possible Pandoc option can be used__ inside `pandoc-arguments`, look in the [Pandoc User's Guide](http://pandoc.org/MANUAL.html). 
+Look in the [Pandoc User's Guide](http://pandoc.org/MANUAL.html) __every other possible Pandoc option can be used__ inside `pandoc-arguments`.
 
 ## Keyboard shortcuts
 
