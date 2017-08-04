@@ -1,16 +1,16 @@
-# _Spandoc_ — run and configure Pandoc inside Sublime
+# _Spandoc_ — Pandoc inside Sublime
 
-A [Sublime Text](sublimetext.com) plugin that uses the infamous open-source parser [Pandoc](pandoc.org) to convert text in nearly every possible format into each other.
-With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Markdown](pandoc.org/MANUAL.html#pandocs-markdown) and with _Spandoc_ you can use it inside Sublime Text!
+A [Sublime Text](https://www.sublimetext.com/) plugin that uses the infamous open-source parser [Pandoc](http://pandoc.org/) to convert text in nearly every possible format into each other.
+With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Markdown](http://pandoc.org/MANUAL.html#pandocs-markdown) and with _Spandoc_ you can use it inside Sublime Text!
 
-_Spandoc_ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). _Spandoc_ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette, a build-system was added to it and it was made async in execution. The configuration system by Pandown was incorporated and the code base was cleared and refactored even more. Other functions from Pandown will follow and be transferred to _Spandoc_.
+_Spandoc_ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](https://packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](https://github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). _Spandoc_ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette, a build-system was added to it and it was made async in execution. The configuration system by Pandown was incorporated and the code base was cleared and refactored even more. Other functions from Pandown will follow and be transferred to _Spandoc_.
 
 
 ## Installation
 
-- [Install Pandoc](pandoc.org/installing.html)
+- [Install Pandoc](http://pandoc.org/installing.html)
 - Install Spandoc by either use:
-  + [Package Control](packagecontrol.io): Run the command: `Package Control: Install Package` and find `Spandoc`.
+  + [Package Control](https://packagecontrol.io/): Run the command: `Package Control: Install Package` and find `Spandoc`.
   + Github: clone or download the [Spandoc repository](https://github.com/geniusupgrader/Spandoc) into your Sublime (loose) packages directory (use the menu `Preferences->Browse Packages…` to find this folder)
 
 
