@@ -5,6 +5,11 @@ With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Mark
 
 __Spandoc__ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](https://packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](https://github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). __Spandoc__ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette, a build-system was added to it and it was made async in execution. The configuration system by Pandown was incorporated and the code base was cleared and refactored even more. Other functions from Pandown will follow and be transferred to __Spandoc__.
 
+## License
+
+MIT License, see `LICENSE.md`
+
+
 
 ## Installation
 
