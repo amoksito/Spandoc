@@ -1,25 +1,25 @@
-# _Spandoc_ — Pandoc inside Sublime
+# __Spandoc__ — Pandoc inside Sublime
 
 A [Sublime Text](https://www.sublimetext.com/) plugin that uses the infamous open-source parser [Pandoc](http://pandoc.org/) to convert text in nearly every possible format into each other.
-With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Markdown](http://pandoc.org/MANUAL.html#pandocs-markdown) and with _Spandoc_ you can use it inside Sublime Text!
+With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Markdown](http://pandoc.org/MANUAL.html#pandocs-markdown) and with __Spandoc__ you can use it inside Sublime Text!
 
-_Spandoc_ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](https://packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](https://github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). _Spandoc_ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette, a build-system was added to it and it was made async in execution. The configuration system by Pandown was incorporated and the code base was cleared and refactored even more. Other functions from Pandown will follow and be transferred to _Spandoc_.
+__Spandoc__ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](https://packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](https://github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). __Spandoc__ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette, a build-system was added to it and it was made async in execution. The configuration system by Pandown was incorporated and the code base was cleared and refactored even more. Other functions from Pandown will follow and be transferred to __Spandoc__.
 
 
 ## Installation
 
 - [Install Pandoc](http://pandoc.org/installing.html)
-- Install Spandoc by either use:
+- Install __Spandoc__ by either use:
   + [Package Control](https://packagecontrol.io/): Run the command: `Package Control: Install Package` and find `Spandoc`.
   + Github: clone or download the [Spandoc repository](https://github.com/geniusupgrader/Spandoc) into your Sublime (loose) packages directory (use the menu `Preferences->Browse Packages…` to find this folder)
 
 
 ## Usage
 
-_Spandoc_ needs to know the command options for Pandoc. At least an input and an output format.
+__Spandoc__ needs to know the command options for Pandoc. At least an input and an output format.
 
 - The input format is automatically taken from the scope under the cursor of the currently edited document, when executing the [commands](#commands).
-- The output format is called a transformation in _Spandoc_. It must be configured in a settings file by defining the `transformations` array.
+- The output format is called a transformation in __Spandoc__. It must be configured in a settings file by defining the `transformations` array.
 
 Two ways to start a Pandoc conversion:
 
@@ -30,13 +30,13 @@ Two ways to start a Pandoc conversion:
 
 There are two commands: `Spandoc` and `Spandoc: Create Config` and the Sublime build system.
 
-#### `Spandoc`
+#### Spandoc
 Internal command name: `spandoc_palette`
 
 The `Spandoc` command opens a command palette and lists the defined transformations from a settings file (in dependence of the scope under the cursor). Afer choosing one transformation label, the transformation will be passed to the internal `spandoc_run` command and the Pandoc conversion will begin.
 
 
-#### `Spandoc: Create Config`
+#### Spandoc: Create Config
 Internal command name: `spandoc_create_config`
 
 This command creates the `folder settings file`. It will copy either the `user settings file` or the `default settings file` to the folder within the currently edited document.
