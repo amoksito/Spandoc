@@ -16,34 +16,33 @@ import shutil
 import json
 if __ST3:
     import Pandown.minify_json as minify_json
-    from Pandown.pandownCriticPreprocessor import *
 else:
     import minify_json
-    from pandownCriticPreprocessor import *
+
+DEBUG_MODE = True
 
 def debug(theMessage):
 
-    # if DEBUG_MODE:
-    print("[Sublime-Pandoc: " + str(theMessage) + "]")
+    if DEBUG_MODE:
+        print("Spandoc: " + str(theMessage))
 
 def err(e):
-    print("[Sublime-Pandoc ERRROR: " + str(e) + "]")
+    print("Spandoc ERROR: " + str(e))
 
 class PromptPandocCommand(sublime_plugin.WindowCommand):
 
-    '''Defines the plugin command palette item.
+    '''Defines the plugin command palette item.'''
 
-    @see Default.sublime-commands'''
 
     options = []
 
     def run(self):
 
-        # return currently edited view, dir and filename from the window
-        view, working_dir, file_name = get_current(self.window)
+        # return view, folder_path and filename from the current window
+        view, folder_path, file_name = get_current(self.window)
 
         # get the user settings:
-        settings = get_user_settings(view, working_dir, file_name)
+        settings = get_settings(view, folder_path, file_name)
 
         self.transformation_list = self.get_transformation_list(settings, self.window)
         self.window.show_quick_panel(self.transformation_list, self.picked_transformation)
@@ -108,10 +107,10 @@ class PandocCommand(sublime_plugin.WindowCommand):
     def run(self, transformation):
 
         # return currently edited view, dir and filename from the window
-        view, working_dir, file_name = get_current(self.window)
+        view, folder_path, file_name = get_current(self.window)
 
         # get the user settings:
-        settings = get_user_settings(view, working_dir, file_name)
+        settings = get_settings(view, folder_path, file_name)
 
         # get all the items from picked transformation out of the settings
         transformation = settings['transformations'][transformation]
@@ -185,14 +184,14 @@ class PandocCommand(sublime_plugin.WindowCommand):
 
         # run pandoc
 
-        sublime.set_timeout_async(lambda: self.pass_to_pandoc(cmd, working_dir, contents, oformat, transformation, output_path), 0)
+        sublime.set_timeout_async(lambda: self.pass_to_pandoc(cmd, folder_path, contents, oformat, transformation, output_path), 0)
 
         # write pandoc command to console
-        print(' '.join(cmd))
+        # print(' '.join(cmd))
 
 
-    def pass_to_pandoc(self, cmd, working_dir, contents, oformat, transformation, output_path):
-        process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=working_dir)
+    def pass_to_pandoc(self, cmd, folder_path, contents, oformat, transformation, output_path):
+        process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
         result, error = process.communicate(contents.encode('utf-8'))  # always waits for the output (buffering). But this is not a problem in a threaded enviroment like sublime.set_timeout_async!
 
         # handle pandoc errors
@@ -202,7 +201,7 @@ class PandocCommand(sublime_plugin.WindowCommand):
             return
 
         # if write to file, open
-        # if oformat is not None and oformat in get_user_settings('pandoc-format-file'):
+        # if oformat is not None and oformat in get_settings('pandoc-format-file'):
         #     try:
         #         if sublime.platform() == 'osx':
         #             subprocess.call(["open", output_path])
@@ -260,143 +259,172 @@ def get_current(window):
 
     # get current file path:
     current_file_path = view.file_name()
+    debug("current file path: " + current_file_path)
     if current_file_path:
-        working_dir = os.path.dirname(current_file_path)
-        file_name = os.path.splitext(current_file_path)[0]
+        folder_path, file_name = os.path.split(current_file_path)
     else:
-        working_dir = None
-        file_name = None
+        folder_path = file_name = None
 
-    return (view, working_dir, file_name)
-
-
-def get_user_settings(view, working_dir=None, file_name=None):
-    '''Return the default settings merged with the user's settings.'''
+    return (view, folder_path, file_name)
 
 
-    configLoc = walkIncludes("pandoc-config.json", working_dir, view.window())
-    if configLoc:
+def get_settings(view, folder_path=None, file_name=None):
+    '''Return a settings file with the highest precedence:
+    1. Is the settings file an absolute file path?
+    2. Is the settings file in the current folder path?
+    3. Is the settings file somewhere in the project?
+    '''
+
+    # 1. Search for a folder settings file
+    folder_settings_file = search_for_folder_settings_file("spandoc.json", folder_path, view.window())
+
+    if folder_settings_file:
+        settings = load_folder_settings_file(folder_settings_file)
+        print("settings after load: ")
+        print(settings)
+
+        # default = sublime.load_settings('Pandoc.sublime-settings')
+        # default = default.get('default', {})
+        # print("default")
+        # print(default)
+
+
+
+    # if there is no folder_settings_file use the user_settings_file
+    else:
+
+        settings = sublime.load_settings('Pandoc.sublime-settings')
+
+        # print("settings")
+        # print(settings)
+
+        settings = settings.get('default', {})
+
+
+
+        # print("default")
+        # print(default)
+
+        # user = settings.get('user', {})
+
+        # if user:
+
+        #     # merge each transformation
+        #     transformations = default.pop('transformations', {})
+        #     user_transformations = user.get('transformations', {})
+        #     for name, data in user_transformations.items():
+        #         if name in transformations:
+        #             transformations[name].update(data)
+        #         else:
+        #             transformations[name] = data
+        #     default['transformations'] = transformations
+        #     user.pop('transformations', None)
+
+        #     # merge all other keys
+        #     default.update(user)
+
+    return settings
+
+
+
+
+def load_folder_settings_file(folder_settings_file):
+
+    try:
+        folder_settings_file = open(folder_settings_file, "r")
+    except IOError as e:
+        sublime.status_message("Error: pandoc-config exists, but could not be read.")
+        err("Spandoc Exception: " + str(e))
+        folder_settings_file.close()
+    else:
+        settings_file_commented = folder_settings_file.read()
+        # print("settings_file_commented:")
+        # print(settings_file_commented)
+        folder_settings_file.close()
+        settings_file = minify_json.json_minify(settings_file_commented)
+        print("settings_file before json.loads:")
+        print(settings_file)
         try:
-            f = open(configLoc, "r")
-        except IOError as e:
-            sublime.status_message("Error: pandoc-config exists, but could not be read.")
-            err("Pandown Exception: " + str(e))
-            f.close()
-        else:
-            pCommentedStr = f.read()
-            f.close()
-            pStr = minify_json.json_minify(pCommentedStr)
-            try:
-                p = json.loads(pStr)
-            except (KeyError, ValueError) as e:
-                sublime.status_message("JSON Error: Cannot parse pandoc-config. See console for details.")
-                err("Pandown Exception: " + str(e))
-                return None
-            if "default" in p:
-                pArg = p["default"]
-                p = pArg
+            settings_file = json.loads(settings_file)
+            print("settings_file afetr json.loads")
+            print(settings_file)
 
-    settings = sublime.load_settings('Pandoc.sublime-settings')
-    default = settings.get('default', {})
-    user = settings.get('user', {})
+        except (KeyError, ValueError) as e:
+            sublime.status_message("JSON Error: Cannot parse spandoc.json. See console for details.")
+            err("uSpandoc Exception: " + str(e))
+            return None
+        if "default" in settings_file:
+            settings = settings_file["default"]
+            print("settings Default")
+            print(settings)
 
-    if user:
-
-        # merge each transformation
-        transformations = default.pop('transformations', {})
-        user_transformations = user.get('transformations', {})
-        for name, data in user_transformations.items():
-            if name in transformations:
-                transformations[name].update(data)
-            else:
-                transformations[name] = data
-        default['transformations'] = transformations
-        user.pop('transformations', None)
-
-        # merge all other keys
-        default.update(user)
-
-    return default
+    return settings
 
 
 
-def walkIncludes(lookFor, working_dir, window=None, prepend=None):
+def search_for_folder_settings_file(file_name, folder_path, window=None):
     '''
-    Check the includes_paths, then the project hierarchy, for the file to include,
-    but only if we don't already have a path.
-    Order of preference should be: working DIR, project DIRs, then includes_paths,
-    then finally giving up and passing the filename to Pandoc.
+    1. Is the settings file an absolute file path?
+    2. Is the settings file in the current folder path?
+    3. Is the settings file somewhere in the project?
     '''
 
-    debug("Looking for " + lookFor)
-    # Did the user pass a specific file?
-    tryAbs = os.path.abspath(os.path.expanduser(lookFor))
-    if os.path.isfile(tryAbs):
-        debug("It's a path! Returning.")
-        return prepend + tryAbs if prepend else tryAbs
+    # 1. Is the settings file an absolute file path?
+    # NOT IMPLEMENTED YET !!!!!!!
+    # debug("Is the settings file \"" + file_name + "\" an absolute file path?")
+    # file_path = os.path.abspath(os.path.expanduser(file_name))
+    # if os.path.isfile(file_path):
+        # debug("The settings file \"" + file_name + "\" is an absolute file path!")
+    #     return file_path
 
-    # Is the file in the current build directory?
-    tryWorking = os.path.join(working_dir, lookFor)
-    if os.path.exists(tryWorking):
-        debug("It's in the build directory! Returning.")
-        return prepend + tryWorking if prepend else tryWorking
+    # 2. Is the settings file in the current folder path?
+    debug("Is the settings file \"" + file_name + "\" in the current folder path?")
+    folder_path_settings_file = os.path.join(folder_path, file_name)
+    if os.path.exists(folder_path_settings_file):
+        debug("Yes!")
+        return folder_path_settings_file
+    debug("No!")
 
-    # Is the file anywhere in the project hierarchy?
-    # if window
-    allFolders = window.folders()
-    debug("allFolders: " + str(allFolders))
-    if len(allFolders) > 0:
-        topLevel = ""
-        (garbage, localName) = os.path.split(working_dir)
-        for folder in allFolders:
+    # 3. Is the settings file somewhere in the project?
+    debug("Is the settings file \"" + file_name + "\" somewhere in the project?")
+    # if search_in_project
+    project_folders = window.folders()
+    # debug("(Searching the following folders and their subfolders: " + str(project_folders) + ")")
+    if project_folders:
+        unused_head, folder_name = os.path.split(folder_path)
+        # debug("folder_name: " + folder_name)
+        located_folder_path = None
+        for folder in project_folders:
             for root, dirs, files in os.walk(folder, topdown=False):
-                (garbage, rootTail) = os.path.split(root)
-                if rootTail == localName:
-                    topLevel = root
-                for name in dirs:
-                    debug("name: " + name)
-                    if name == localName:
-                        topLevel = folder
-        debug("topLevel: " + topLevel)
-        checkDIR = working_dir
-        debug("Initial checkDIR: " + checkDIR)
-        if topLevel:
-            while True:
-                fileToCheck = os.path.join(checkDIR, lookFor)
-                if os.path.exists(fileToCheck):
-                    debug("It's in the project! Returning %s." % fileToCheck)
-                    return prepend + fileToCheck if prepend else fileToCheck
-                if checkDIR == topLevel:
-                    break
-                else:
-                    checkDIR = os.path.abspath(os.path.join(checkDIR, os.path.pardir))
+                # debug("files: " + str(files))
+                # debug("root: " + root)
 
-    # for now: disabled:
-    # Are there no paths to check?
-    # if self.includes_paths_len == 0 and lookFor != "pandoc-config.json":
-    #     debug("No includes paths to check. Returning the input for Pandoc to handle.")
-    #     return prepend + lookFor if prepend else lookFor
-    # # Is the file in the includes_paths?
-    # for pathToCheck in self.includes_paths:
-    #     pathToCheck = os.path.expanduser(pathToCheck)
-    #     pathToCheck = os.path.abspath(pathToCheck)
-    #     fileToCheck = os.path.join(pathToCheck, lookFor)
-    #     if os.path.isfile(fileToCheck):
-    #         debug("It's in the includes paths! Returning: " + fileToCheck)
-    #         return prepend + fileToCheck if prepend else fileToCheck
-
-    # If the script was checking for a pandoc-config.json, return None.
-    if lookFor == "pandoc-config.json":
-        debug("Couldn't find config file in project path.")
-        return None
-    else:
-        # The file wasn't anywhere, so let Pandoc handle it.
-        debug("Can't find %s. Letting Pandoc deal with it." % lookFor)
-        return prepend + lookFor if prepend else lookFor
-
-    sublime.error_message("Fatal error looking for {0}".format(lookFor))
-    return None
-
+                # unused_roothead, root_tail = os.path.split(root)
+                # debug("root_tail " + root_tail)
+                for file in files:
+                    pass
+                    # debug("file_name: " + file_name)
+                    if file == file_name:
+                        # print("**************************")
+                        # debug("dirs:"+ str(dirs))
+                        # debug("dirs:"+ str(root))
+                        located_folder_path = root
+                # for name in dirs:
+                #     # debug("name: " + name)
+                #     if name == folder_name:
+                #         located_folder_path = folder
+        # debug("located_folder_path: " + located_folder_path)
+        # checkDIR = folder_path
+        # debug("Initial checkDIR: " + checkDIR)
+        if located_folder_path:
+            folder_settings_file = os.path.join(located_folder_path, file_name)
+            if os.path.exists(folder_settings_file):
+                debug("Yes!")
+                debug("It's in this folder: " + folder_settings_file)
+                return folder_settings_file
+        else:
+            debug("No!")
+            return None
 
 
 
