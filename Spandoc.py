@@ -1,4 +1,3 @@
-
 import sublime
 import sublime_plugin
 from collections import OrderedDict
@@ -29,7 +28,7 @@ def debug(theMessage):
 def err(e):
     print("Spandoc ERROR: " + str(e))
 
-class PromptPandocCommand(sublime_plugin.WindowCommand):
+class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
     '''Defines the plugin command palette item.'''
 
@@ -79,30 +78,20 @@ class PromptPandocCommand(sublime_plugin.WindowCommand):
 
 
     def picked_transformation(self, i):
-        ''' pass the name of the picked_transformation to the pandoc command and execute'''
+        ''' pass the name of the picked_transformation to the Spandoc command and execute'''
         if i == -1:
             return
 
         # get the name of the picked_transformation from the selected item "i":
         picked_transformation = self.transformation_list[i]
 
-        # execute the pandoc command with passing the wanted/picked transformation
-        self.window.run_command('pandoc', {'transformation': picked_transformation })
+        # execute the Spandoc command with passing the wanted/picked transformation
+        self.window.run_command('Spandoc', {'transformation': picked_transformation })
 
 
-class BuildPandocCommand(sublime_plugin.WindowCommand):
+class SpandocCommand(sublime_plugin.WindowCommand):
 
-    def run(self, transformation):
-
-        # you need a BuildPandocCommand and you execute the PandocCommand directly with the build_system and passing transformation,
-        # because it must be a Sublime WindowCommand and no TextCommand like it is in the PandocCommand
-        self.window.active_view().run_command('pandoc', {'transformation': transformation })
-
-
-
-class PandocCommand(sublime_plugin.WindowCommand):
-
-    '''Transforms using Pandoc.'''
+    '''Transforms using Spandoc.'''
 
     def run(self, transformation):
 
@@ -119,12 +108,12 @@ class PandocCommand(sublime_plugin.WindowCommand):
         region = sublime.Region(0, view.size())
         contents = view.substr(region)
 
-        # pandoc executable
-        binary_name = 'pandoc.exe' if sublime.platform() == 'windows' else 'pandoc'
-        pandoc = _find_binary(binary_name, settings['pandoc-path'])
-        if pandoc is None:
+        # Spandoc executable
+        binary_name = 'Spandoc.exe' if sublime.platform() == 'windows' else 'Spandoc'
+        Spandoc = _find_binary(binary_name, settings['Spandoc-path'])
+        if Spandoc is None:
             return
-        cmd = [pandoc]
+        cmd = [Spandoc]
 
         # from format
         score = 0
@@ -137,8 +126,8 @@ class PandocCommand(sublime_plugin.WindowCommand):
         cmd.extend(['-f', iformat])
 
         # configured parameters
-        args = Args(transformation['pandoc-arguments'])
-        # Use pandoc output format name as file extension unless specified by out-ext in transformation
+        args = Args(transformation['Spandoc-arguments'])
+        # Use Spandoc output format name as file extension unless specified by out-ext in transformation
         try:
             transformation['out-ext']
         except:
@@ -149,8 +138,8 @@ class PandocCommand(sublime_plugin.WindowCommand):
         oformat = args.get(short=['t', 'w'], long=['to', 'write'])
         oext = argsext
 
-        # pandoc doesn't actually take 'pdf' as an output format
-        # see https://github.com/jgm/pandoc/issues/571
+        # Spandoc doesn't actually take 'pdf' as an output format
+        # see https://github.com/jgm/Spandoc/issues/571
         if oformat == 'pdf':
             args = args.remove(
                 short=['t', 'w'], long=['to', 'write'], values=['pdf'])
@@ -165,15 +154,15 @@ class PandocCommand(sublime_plugin.WindowCommand):
 
         # if write to file, add -o if necessary, set file path to output_path
         output_path = None
-        if oformat is not None and oformat in settings['pandoc-format-file']:
+        if oformat is not None and oformat in settings['Spandoc-format-file']:
             output_path = args.get(short=['o'], long=['output'])
             if output_path is None:
-                # note the file extension matches the pandoc format name
+                # note the file extension matches the Spandoc format name
                 if argslocal and file_name:
                     output_path = file_name
                 else:
                     output_path = tempfile.NamedTemporaryFile().name
-                # If a specific output format not specified in transformation, default to pandoc format name
+                # If a specific output format not specified in transformation, default to Spandoc format name
                 if oext is None:
                     output_path += "." + oformat
                 else:
@@ -182,11 +171,11 @@ class PandocCommand(sublime_plugin.WindowCommand):
 
         cmd.extend(args)
 
-        # run pandoc
+        # run Spandoc
 
         sublime.set_timeout_async(lambda: self.pass_to_pandoc(cmd, folder_path, contents, oformat, transformation, output_path), 0)
 
-        # write pandoc command to console
+        # write Spandoc command to console
         # print(' '.join(cmd))
 
 
@@ -194,14 +183,14 @@ class PandocCommand(sublime_plugin.WindowCommand):
         process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
         result, error = process.communicate(contents.encode('utf-8'))  # always waits for the output (buffering). But this is not a problem in a threaded enviroment like sublime.set_timeout_async!
 
-        # handle pandoc errors
+        # handle Spandoc errors
         if error:
             sublime.error_message('\n\n'.join(['Error when running:', ' '.join(cmd), error.decode('utf-8').strip()]))
             # print('\n\n'.join(['Error when running:', ' '.join(cmd), error.decode('utf-8').strip()]))  # just display errors in the console windows
             return
 
         # if write to file, open
-        # if oformat is not None and oformat in get_settings('pandoc-format-file'):
+        # if oformat is not None and oformat in get_settings('Spandoc-format-file'):
         #     try:
         #         if sublime.platform() == 'osx':
         #             subprocess.call(["open", output_path])
@@ -230,7 +219,7 @@ class PandocCommand(sublime_plugin.WindowCommand):
             view.set_syntax_file(transformation['syntax_file'])
 
         # Output Status message done:
-        sublime.status_message("🚩🚩🚩 Pandoc DONE 🚩🚩🚩")
+        sublime.status_message("🚩🚩🚩 Spandoc DONE 🚩🚩🚩")
 
 def _find_binary(name, default=None):
     '''Returns a configure path or looks for an executable on the system path.
@@ -248,7 +237,7 @@ def _find_binary(name, default=None):
         if os.path.exists(path):
             return path
 
-    sublime.error_message('Could not find pandoc executable on PATH.')
+    sublime.error_message('Could not find Spandoc executable on PATH.')
     return None
 
 
@@ -283,7 +272,7 @@ def get_settings(view, folder_path=None, file_name=None):
         print("settings after load: ")
         print(settings)
 
-        # default = sublime.load_settings('Pandoc.sublime-settings')
+        # default = sublime.load_settings('Spandoc.sublime-settings')
         # default = default.get('default', {})
         # print("default")
         # print(default)
@@ -293,14 +282,16 @@ def get_settings(view, folder_path=None, file_name=None):
     # if there is no folder_settings_file use the user_settings_file
     else:
 
-        settings = sublime.load_settings('Pandoc.sublime-settings')
+        settings = sublime.load_settings('Spandoc.sublime-settings')
 
-        # print("settings")
-        # print(settings)
-
-        settings = settings.get('default', {})
+        print("settings")
+        print(settings)
 
 
+        settings = settings.get('default')
+
+        print("settings")
+        print(settings)
 
         # print("default")
         # print(default)
@@ -333,7 +324,7 @@ def load_folder_settings_file(folder_settings_file):
     try:
         folder_settings_file = open(folder_settings_file, "r")
     except IOError as e:
-        sublime.status_message("Error: pandoc-config exists, but could not be read.")
+        sublime.status_message("Error: Spandoc-config exists, but could not be read.")
         err("Spandoc Exception: " + str(e))
         folder_settings_file.close()
     else:
@@ -428,14 +419,9 @@ def search_for_folder_settings_file(file_name, folder_path, window=None):
 
 
 
-def _c(item):
-    '''Pretty prints item to console.'''
-    pprint.PrettyPrinter().pprint(item)
-
-
 class Args(list):
 
-    '''Process Pandoc arguments.
+    '''Process Spandoc arguments.
 
     "short" are of the form "-k val""".
     "long" arguments are of the form "--key=val""".'''
