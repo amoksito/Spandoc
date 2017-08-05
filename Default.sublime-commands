@@ -1,13 +1,13 @@
 [
     {
-        "caption": "Pandoc",
-        "command": "prompt_pandoc"
+        "caption": "Spandoc",
+        "command": "Spandoc_palette"
     },
 
 
     {
     	"caption": "Pandoc: Project Settings",
-    	"command": "pandoc_touch_project_config"
+    	"command": "Spandoc_create_config"
     }
 
 
