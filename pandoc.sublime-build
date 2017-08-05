@@ -6,7 +6,7 @@
 
 	"variants":
 		[
-	    { "name": "Run", "transformation": "PDF" },
+	    { "name": "PDF", "transformation": "PDF" },
 	  ]
 
 }
