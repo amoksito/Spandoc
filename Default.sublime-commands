@@ -1,13 +1,13 @@
 [
     {
         "caption": "Spandoc",
-        "command": "Spandoc_palette"
+        "command": "spandoc_palette"
     },
 
 
     {
-    	"caption": "Pandoc: Project Settings",
-    	"command": "Spandoc_create_config"
+    	"caption": "Spandoc: Create Config",
+    	"command": "spandoc_create_config"
     }
 
 
