@@ -23,7 +23,7 @@ MIT License, see `LICENSE.md`
 
 __Spandoc__ needs to know the command options for Pandoc. At least an input and an output format.
 
-- The input format is automatically taken from the scope under the cursor of the currently edited document, when executing the [commands](#commands).
+- The input format is automatically taken from the scope under the cursor of the current document, when executing the [commands](#commands).
 - The output format is called a transformation in __Spandoc__. It must be configured in a settings file by defining the `transformations` array.
 
 Two ways to start a Pandoc conversion:
@@ -44,7 +44,7 @@ The `Spandoc` command opens a command palette and lists the defined transformati
 #### Spandoc: Create Config
 Internal command name: `spandoc_create_config`
 
-This command creates the *folder settings file*. It will copy either the *user settings file* or the *default settings file* to the folder within the currently edited document.
+This command creates the *Current folder settings file*. If available, it will copy the *user settings file*, otherwise the *default settings file* to the current folder (with the current document).
 
 
 ### Sublime build system
@@ -56,7 +56,7 @@ The automatic build system of Sublime (`ctrl+b`) will pass the transformation la
 
 - _Default settings file_ `spandoc.sublime-settings`, located inside the package directory of Sublime
 - _User settings file_ (with the same name), located inside the user directory of Sublime.
-- _Folder settings file_ `spandoc.json`, located inside the folder or subfolders within the currently edited document.
+- _Current folder settings file_ `spandoc.json`, located inside the current folder (or subfolders).
 
 Listed in reverse precedence: Folder settings overwrite User settings overwrite default settings.
 
@@ -79,7 +79,7 @@ With the `transformations` you define an output format for Pandoc. Every transfo
 - `scope` array
 - `pandoc-arguments` array with the `--to` parameter at minimum
 
-The transformation label is only a Name for the transformation. This name is for example displayed in the command palette and will be always used to choose the transformation. The `scope` array decides if the transformation can be applied (it is in fact a `--from` parameter). Maybe it is more reasonable to just take the syntax of the currently edited file and not the scope under the cursor… The `--to` parameter, which must be inside the `pandoc-arguments` array is the `--to` parameter for Pandoc. Because of that it must follow the [naming rules](http://pandoc.org/MANUAL.html#options) by Pandoc, but propably it should have a similar name as the transformation label.
+The transformation label is only a Name for the transformation. This name is for example displayed in the command palette and will be always used to choose the transformation. The `scope` array decides if the transformation can be applied (it is in fact a `--from` parameter). Maybe it is more reasonable to just take the syntax of the current file and not the scope under the cursor… The `--to` parameter, which must be inside the `pandoc-arguments` array is the `--to` parameter for Pandoc. Because of that it must follow the [naming rules](http://pandoc.org/MANUAL.html#options) by Pandoc, but propably it should have a similar name as the transformation label.
 
 Look in the [Pandoc User's Guide](http://pandoc.org/MANUAL.html) __every other possible Pandoc option can be used__ inside `pandoc-arguments`.
 
