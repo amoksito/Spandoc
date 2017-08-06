@@ -1,29 +1,24 @@
 {
-  "schema_version": "2.0",
+  "schema_version": "v3.0",
   "packages": [
     {
-      "name": "Pandoc",
-      "details": "https://github.com/tbfisher/sublimetext-Pandoc",
+      "name": "Spandoc",
+      "details": "https://github.com/geniusupgrader/Spandoc/",
       "labels": [
-        "latex",
-        "github flavored markdown",
-        "github markdown",
-        "html",
-        "markdown",
-        "markup",
+        "Spandoc",
         "pandoc",
-        "reStructuredText",
-        "text manipulation",
-        "textile"
+        "markdown",
+        "parser",
+        "converter",
+        "document",
+        "html",
+        "pdf",
       ],
       "releases": [
         {
-          "sublime_text": "<3000",
-          "details": "https://github.com/tbfisher/sublimetext-Pandoc/tree/1.x"
-        },
-        {
-          "sublime_text": ">=3000",
-          "details": "https://github.com/tbfisher/sublimetext-Pandoc/tree/2.x"
+          "sublime_text": "*",
+          "details": "https://github.com/tbfisher/sublimetext-Pandoc/tree/2.x",
+          "tags": true
         }
       ]
     }
