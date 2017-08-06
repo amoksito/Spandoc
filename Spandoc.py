@@ -33,7 +33,7 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
         # get the user settings:
         settings = get_settings(view, folder_path, file_name)
-        debug("settings: " + str(settings))
+        # debug("settings: " + str(settings))
 
         # get transformation list for the current view
         self.transformation_list = self.get_transformation_list(settings, view)
@@ -154,37 +154,42 @@ class SpandocCommand(sublime_plugin.WindowCommand):
         try:
             transformation['out-local']
         except:
-            argslocal = None
+            out_local = None
         else:
-            argslocal = transformation['out-local']
+            out_local = transformation['out-local']
 
-        # if write to file, add -o if necessary, set file path to output_path
-        output_path = None
+        # if write to file, add -o if necessary, set file name to output name
+        # but the file name needs to be without an extension. the extension will be added in accordance with the to/output format
+        file_name, file_extension = os.path.splitext(file_name)
+        output_name = None
         if oformat is not None and oformat in settings['pandoc-format-file']:
-            output_path = args.get(short=['o'], long=['output'])
-            if output_path is None:
-                # note the file extension matches the Spandoc format name
-                if argslocal and file_name:
-                    output_path = file_name
+            output_name = args.get(short=['o'], long=['output'])
+            # debug("output_name: " + str(output_name))
+            if output_name is None:
+                # note the file extension matches the pandoc format name
+                if out_local and file_name:
+                    output_name = file_name
+                    # debug("output_name: " + str(output_name))
                 else:
-                    output_path = tempfile.NamedTemporaryFile().name
-                # If a specific output format not specified in transformation, default to Spandoc format name
+                    output_name = tempfile.NamedTemporaryFile().name
+                # If a specific output format not specified in transformation, default to pandoc format name
                 if oext is None:
-                    output_path += "." + oformat
+                    output_name += "." + oformat
                 else:
-                    output_path += "." + oext
-                args.extend(['-o', output_path])
+                    output_name += "." + oext
+                # debug("output_name: " + str(output_name))
+                args.extend(['-o', output_name])
 
         cmd.extend(args)
 
         # run pandoc in async mode
-        sublime.set_timeout_async(lambda: self.pass_to_pandoc(cmd, folder_path, contents, oformat, transformation, output_path), 0)
+        sublime.set_timeout_async(lambda: self.pass_to_pandoc(cmd, folder_path, contents, oformat, transformation, output_name), 0)
 
         # write pandoc command to console
         debug("cmd: " + str(cmd))
 
 
-    def pass_to_pandoc(self, cmd, folder_path, contents, oformat, transformation, output_path):
+    def pass_to_pandoc(self, cmd, folder_path, contents, oformat, transformation, output_name):
         process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
         # Next line always waits for the output (buffering). But this is not a problem in a threaded enviroment like sublime.set_timeout_async!
         result, error = process.communicate(contents.encode('utf-8'))
@@ -199,13 +204,13 @@ class SpandocCommand(sublime_plugin.WindowCommand):
         # if oformat is not None and oformat in get_settings('pandoc-format-file'):
         #     try:
         #         if sublime.platform() == 'osx':
-        #             subprocess.call(["open", output_path])
+        #             subprocess.call(["open", output_name])
         #         elif sublime.platform() == 'windows':
-        #             os.startfile(output_path)
+        #             os.startfile(output_name)
         #         elif os.name == 'posix':
-        #             subprocess.call(('xdg-open', output_path))
+        #             subprocess.call(('xdg-open', output_name))
         #     except:
-        #         sublime.message_dialog('Wrote to file ' + output_path)
+        #         sublime.message_dialog('Wrote to file ' + output_name)
         #     return
 
         # write to buffer
