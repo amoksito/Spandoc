@@ -1,7 +1,7 @@
 {
 
 	"selector": "text.html.markdown",
-	"target": "pandoc",
+	"target": "spandoc",
 	"transformation": "HTML (No Template)",
 
 	"variants":
