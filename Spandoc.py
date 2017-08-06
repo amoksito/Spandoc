@@ -18,201 +18,22 @@ if __ST3:
 else:
     import minify_json
 
-DEBUG_MODE = True
-
-def debug(theMessage):
-
-    if DEBUG_MODE:
-        print("Spandoc: " + str(theMessage))
-
-def err(e):
-    print("Spandoc ERROR: " + str(e))
-
-
-def _find_binary(name, default=None):
-    '''Returns a configure path or looks for an executable on the system path.
-    '''
-
-    if default is not None:
-        if os.path.exists(default):
-            return default
-        msg = 'configured path for {0} {1} not found.'.format(name, default)
-        sublime.error_message(msg)
-        return None
-
-    for dirname in os.environ['PATH'].split(os.pathsep):
-        path = os.path.join(dirname, name)
-        if os.path.exists(path):
-            return path
-
-    sublime.error_message('Could not find Spandoc executable on PATH.')
-    return None
-
-
-def get_current(window):
-
-    # returns the currently edited view.
-    view = window.active_view()
-
-    # get current file path:
-    current_file_path = view.file_name()
-    debug("current file path: " + current_file_path)
-    if current_file_path:
-        folder_path, file_name = os.path.split(current_file_path)
-    else:
-        folder_path = file_name = None
-
-    return (view, folder_path, file_name)
-
-
-def get_settings(view, folder_path=None, file_name=None):
-    '''Return a settings file with the highest precedence:
-    1. Is the settings file an absolute file path?
-    2. Is the settings file in the current folder path?
-    3. Is the settings file somewhere in the project?
-    '''
-
-    # 1. Search for a folder settings file
-    folder_settings_file = search_for_folder_settings_file("spandoc.json", folder_path, view.window())
-
-    # if there is a folder_settings_file, load its settings, else use either the user_settings_file or the default_settings_file
-    if folder_settings_file:
-        settings = load_folder_settings_file(folder_settings_file)
-    else:
-        settings = sublime.load_settings('Spandoc.sublime-settings')
-
-
-        # only the default array is needed
-        default = settings.get('default')
-
-        # but when there is a user array instead of a default array, then merrge the settings
-        user = settings.get('user', {})
-        if user:
-            # merge each transformation
-            transformations = default.pop('transformations', {})
-            user_transformations = user.get('transformations', {})
-            for name, data in user_transformations.items():
-                if name in transformations:
-                    transformations[name].update(data)
-                else:
-                    transformations[name] = data
-            default['transformations'] = transformations
-            user.pop('transformations', None)
-
-            # merge all other keys
-            default.update(user)
-
-        settings = default
-    return settings
-
-
-def search_for_folder_settings_file(file_name, folder_path, window=None):
-    '''
-    1. Is the settings file an absolute file path?
-    2. Is the settings file in the current folder path?
-    3. Is the settings file somewhere in the project?
-    '''
-
-    # 1. Is the settings file an absolute file path?
-    # NOT IMPLEMENTED YET !!!!!!!
-    # debug("Is the settings file \"" + file_name + "\" an absolute file path?")
-    # file_path = os.path.abspath(os.path.expanduser(file_name))
-    # if os.path.isfile(file_path):
-        # debug("The settings file \"" + file_name + "\" is an absolute file path!")
-    #     return file_path
-
-    # 2. Is the settings file in the current folder path?
-    debug("Is the settings file \"" + file_name + "\" in the current folder path?")
-    folder_path_settings_file = os.path.join(folder_path, file_name)
-    if os.path.exists(folder_path_settings_file):
-        debug("Yes!")
-        return folder_path_settings_file
-    debug("No!")
-
-    # 3. Is the settings file somewhere in the project?
-    debug("Is the settings file \"" + file_name + "\" somewhere in the project?")
-    # if search_in_project
-    project_folders = window.folders()
-    # debug("(Searching the following folders and their subfolders: " + str(project_folders) + ")")
-    if project_folders:
-        unused_head, folder_name = os.path.split(folder_path)
-        # debug("folder_name: " + folder_name)
-        located_folder_path = None
-        for folder in project_folders:
-            for root, dirs, files in os.walk(folder, topdown=False):
-                # debug("files: " + str(files))
-                # debug("root: " + root)
-
-                # unused_roothead, root_tail = os.path.split(root)
-                # debug("root_tail " + root_tail)
-                for file in files:
-                    pass
-                    # debug("file_name: " + file_name)
-                    if file == file_name:
-                        # print("**************************")
-                        # debug("dirs:"+ str(dirs))
-                        # debug("dirs:"+ str(root))
-                        located_folder_path = root
-                # for name in dirs:
-                #     # debug("name: " + name)
-                #     if name == folder_name:
-                #         located_folder_path = folder
-        # debug("located_folder_path: " + located_folder_path)
-        # checkDIR = folder_path
-        # debug("Initial checkDIR: " + checkDIR)
-        if located_folder_path:
-            folder_settings_file = os.path.join(located_folder_path, file_name)
-            if os.path.exists(folder_settings_file):
-                debug("Yes!")
-                debug("It's in this folder: " + folder_settings_file)
-                return folder_settings_file
-        else:
-            debug("No!")
-            return None
-
-
-def load_folder_settings_file(folder_settings_file):
-
-    try:
-        folder_settings_file = open(folder_settings_file, "r")
-    except IOError as e:
-        sublime.status_message("Error: Spandoc-config exists, but could not be read.")
-        err("Spandoc Exception: " + str(e))
-        folder_settings_file.close()
-    else:
-        settings_file_commented = folder_settings_file.read()
-        # print("settings_file_commented:")
-        # print(settings_file_commented)
-        folder_settings_file.close()
-        settings_file = minify_json.json_minify(settings_file_commented)
-        try:
-            settings_file = json.loads(settings_file)
-        except (KeyError, ValueError) as e:
-            sublime.status_message("JSON Error: Cannot parse spandoc.json. See console for details.")
-            err("uSpandoc Exception: " + str(e))
-            return None
-        if "default" in settings_file:
-            settings = settings_file["default"]
-            print("settings Default")
-            print(settings)
-
-    return settings
-
-
+DEBUG_MODE = False
 
 class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
     '''Defines the plugin command palette item.'''
 
-    options = []
-
     def run(self):
 
         # return view, folder_path and filename from the current window
         view, folder_path, file_name = get_current(self.window)
+        debug("folder_path: " + folder_path)
+        debug("file_name: " + file_name)
 
         # get the user settings:
         settings = get_settings(view, folder_path, file_name)
+        debug("settings: " + str(settings))
 
         self.transformation_list = self.get_transformation_list(settings, self.window)
         self.window.show_quick_panel(self.transformation_list, self.picked_transformation)
@@ -235,17 +56,15 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
                     ranked[label] = score
 
         if not len(ranked):
-            sublime.error_message(
-                'No transformations configured for the syntax '
-                + view.settings().get('syntax'))
+            sublime.error_message('No transformations configured for the syntax '+ view.settings().get('syntax'))
             return
 
         # reverse sort
-        self.options = list(OrderedDict(sorted(
+        transformation_list = list(OrderedDict(sorted(
             ranked.items(), key=lambda t: t[1])).keys())
-        self.options.reverse()
+        transformation_list.reverse()
 
-        return self.options
+        return transformation_list
 
 
     def picked_transformation(self, i):
@@ -255,13 +74,10 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
         # get the name of the picked_transformation from the selected item "i":
         picked_transformation = self.transformation_list[i]
-
-        print("picked_transformation")
-        print(picked_transformation)
+        debug("picked_transformation: " + picked_transformation)
 
         # execute the Spandoc command with passing the wanted/picked transformation
         self.window.run_command('spandoc', {'transformation': picked_transformation })
-        print ("hhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh")
 
 
 class SpandocCommand(sublime_plugin.WindowCommand):
@@ -272,8 +88,6 @@ class SpandocCommand(sublime_plugin.WindowCommand):
 
         # return currently edited view, dir and filename from the window
         view, folder_path, file_name = get_current(self.window)
-
-        print ("************************")
 
         # get the user settings:
         settings = get_settings(view, folder_path, file_name)
@@ -447,3 +261,161 @@ class Args(list):
                     continue
             ret.append(arg)
         return ret
+
+
+
+################################### Global Functions: ###################################
+
+def debug(theMessage):
+
+    if DEBUG_MODE:
+        print("Spandoc: " + str(theMessage))
+
+def err(e):
+    print("Spandoc ERROR: " + str(e))
+
+
+def _find_binary(name, default=None):
+    '''Returns a configure path or looks for an executable on the system path.
+    '''
+
+    if default is not None:
+        if os.path.exists(default):
+            return default
+        msg = 'configured path for {0} {1} not found.'.format(name, default)
+        sublime.error_message(msg)
+        return None
+
+    for dirname in os.environ['PATH'].split(os.pathsep):
+        path = os.path.join(dirname, name)
+        if os.path.exists(path):
+            return path
+
+    sublime.error_message('Could not find Spandoc executable on PATH.')
+    return None
+
+
+def get_current(window):
+
+    # returns the currently edited view.
+    view = window.active_view()
+
+    # get current file path:
+    current_file_path = view.file_name()
+    debug("current file path: " + current_file_path)
+    if current_file_path:
+        folder_path, file_name = os.path.split(current_file_path)
+    else:
+        folder_path = file_name = None
+
+    return (view, folder_path, file_name)
+
+
+def get_settings(view, folder_path=None, file_name=None):
+    '''Return a settings file with the highest precedence: '''
+
+    # Search for a folder settings file
+    folder_settings_file = search_for_folder_settings_file("spandoc.json", folder_path, view.window())
+
+    # if there is a folder_settings_file, load its settings, else use either the user_settings_file or the default_settings_file
+    if folder_settings_file:
+        settings = load_folder_settings_file(folder_settings_file)
+    else:
+        settings = sublime.load_settings('Spandoc.sublime-settings')
+
+        # only the default array is needed
+        default = settings.get('default')
+
+        # but when there is a user array instead of a default array, then merrge the settings
+        user = settings.get('user', {})
+        if user:
+            # merge each transformation
+            transformations = default.pop('transformations', {})
+            user_transformations = user.get('transformations', {})
+            for name, data in user_transformations.items():
+                if name in transformations:
+                    transformations[name].update(data)
+                else:
+                    transformations[name] = data
+            default['transformations'] = transformations
+            user.pop('transformations', None)
+
+            # merge all other keys
+            default.update(user)
+
+        settings = default
+    return settings
+
+
+def search_for_folder_settings_file(file_name, folder_path, window=None):
+    '''
+    1. Is the settings file an absolute file path?
+    2. Is the settings file in the current folder path?
+    3. Is the settings file somewhere in the project?
+    '''
+
+    # 1. Is the settings file an absolute file path?
+    # NOT IMPLEMENTED YET !!!!!!!
+    # debug("Is the settings file \"" + file_name + "\" an absolute file path?")
+    # file_path = os.path.abspath(os.path.expanduser(file_name))
+    # if os.path.isfile(file_path):
+        # debug("The settings file \"" + file_name + "\" is an absolute file path!")
+    #     return file_path
+
+    # 2. Is the settings file in the current folder path?
+    debug("Is the settings file \"" + file_name + "\" in the current folder path?")
+    folder_path_settings_file = os.path.join(folder_path, file_name)
+    if os.path.exists(folder_path_settings_file):
+        debug("Yes!")
+        return folder_path_settings_file
+    debug("No!")
+
+    # 3. Is the settings file somewhere in the project?
+    debug("Is the settings file \"" + file_name + "\" somewhere in the project?")
+    project_folders = window.folders()
+    debug("(Searching the following folders and their subfolders: " + str(project_folders) + ")")
+    if project_folders:
+        unused_head, folder_name = os.path.split(folder_path)
+        located_folder_path = None
+        for folder in project_folders:
+            for root, dirs, files in os.walk(folder, topdown=False):
+                for file in files:
+                    # debug("file_name: " + file_name)
+                    if file == file_name:
+                        located_folder_path = root
+        # debug("located_folder_path: " + located_folder_path)
+        if located_folder_path:
+            folder_settings_file = os.path.join(located_folder_path, file_name)
+            if os.path.exists(folder_settings_file):
+                debug("Yes!")
+                debug("It's in this folder: " + folder_settings_file)
+                return folder_settings_file
+        else:
+            debug("No!")
+            return None
+
+
+def load_folder_settings_file(folder_settings_file):
+
+    try:
+        folder_settings_file = open(folder_settings_file, "r")
+    except IOError as e:
+        sublime.status_message("Error: Spandoc-config exists, but could not be read.")
+        err("Spandoc Exception: " + str(e))
+        folder_settings_file.close()
+    else:
+        settings_file_commented = folder_settings_file.read()
+        folder_settings_file.close()
+        settings_file = minify_json.json_minify(settings_file_commented)
+        try:
+            settings_file = json.loads(settings_file)
+        except (KeyError, ValueError) as e:
+            sublime.status_message("JSON Error: Cannot parse spandoc.json. See console for details.")
+            err("uSpandoc Exception: " + str(e))
+            return None
+        if "default" in settings_file:
+            settings = settings_file["default"]
+
+    return settings
+
+
