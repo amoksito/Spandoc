@@ -11,7 +11,9 @@
     //    "pandoc-path": "/usr/local/bin/pandoc",
     // -  windows
     //    "pandoc-path": "C:/Users/[username]/AppData/Local/Pandoc/pandoc.exe",
-    "pandoc-path": null,
+    "pandoc-path": "C:/Users/robin/AppData/Roaming/cabal/bin/pandoc.exe",
+
+
 
     // transformations
     "transformations": {
@@ -20,7 +22,7 @@
       // be a name related to the format of the output.
       "Markdown (Pandoc)": {
         // Opens output in new buffer (instead of replacing input in same buffer)
-        "new-buffer": 1,
+        // "new-buffer": 1,
         // maps sublime scope to input format. If the input matches against the
         // given scope, this transformation becomes available, and the input
         // format is used as the pandoc --from option.
@@ -43,42 +45,153 @@
         ]
       },
 
-      "HTML 5": {
-        "new-buffer": 1,
+      "HTML": {
+        // "new-buffer": 1,
         "scope": {
-          "text.html.markdown": "markdown"
+          "text.html.markdown": "markdown+raw_tex+tex_math_single_backslash"
         },
         "syntax_file": "Packages/HTML/HTML.tmLanguage",
+        "out-local": true,
         "pandoc-arguments": [
-          "--to=html5",
-          "--no-highlight"
+          "--to=html",
+          "-s",
+          "--filter=pandoc-include",
+          "--filter=pandoc-crossref",
+          "--toc",
+          "--template=Templates/template.html",
+          "--number-sections",
+          "--mathjax",
+          "--metadata=reference-section-title=Literaturverzeichnis",
+          "--metadata=link-citations",
+          "--bibliography=Citations/AirBearings.bib",
+          "--highlight-style=pygments",
+          "--csl=Citations/ieee.csl",
+          "--metadata=crossrefYaml=Templates/pandoc-crossref.yaml",
+          "--metadata=lang=de-DE",
+          "--wrap=none",
+          "--parse-raw"
         ]
       },
 
-      // note these are examples of output formats that should not be opened in a
-      // sublime text buffer. See "pandoc-format-file" below
 
-      // @see http://johnmacfarlane.net/pandoc/README.html#creating-a-pdf
-      "PDF": {
+      "HTML (No Template)": {
+        // "new-buffer": 1,
+        "scope": {
+          "text.html.markdown": "markdown+raw_tex+tex_math_single_backslash"
+        },
+        // "syntax_file": "Packages/HTML/HTML.tmLanguage",
+        "out-local": true,
+        "pandoc-arguments": [
+          "--to=html",
+          "-s",
+          "--filter=pandoc-include",
+          "--filter=pandoc-crossref",
+          "--toc",
+          // "--template=Templates/template.html",
+          "--number-sections",
+          "--mathjax",
+          "--metadata=reference-section-title=Literaturverzeichnis",
+          "--metadata=link-citations",
+          // "--bibliography=Citations/AirBearings.bib",
+          "--highlight-style=pygments",
+          "--csl=Citations/ieee.csl",
+          // "--metadata=crossrefYaml=Templates/pandoc-crossref.yaml",
+          "--metadata=lang=de-DE",
+          "--wrap=none",
+          "--parse-raw"
+        ]
+      },
+
+
+
+      "Latex": {
+        "scope": {
+          "text.html": "html",
+          "text.html.markdown": "markdown+raw_tex+tex_math_single_backslash"
+        },
+        "out-local": true,
+        "pandoc-arguments": [
+          "--to=latex",
+          "-s",
+          "--filter=pandoc-include",
+          "--filter=pandoc-crossref",
+          "--toc",
+          "--template=Templates/template.latex",
+          "--number-sections",
+          "--mathjax",
+          "--metadata=reference-section-title=Literaturverzeichnis",
+          "--metadata=link-citations",
+          "--bibliography=Citations/AirBearings.bib",
+          "--highlight-style=pygments",
+          "--csl=Citations/ieee.csl",
+          "--metadata=crossrefYaml=Templates/pandoc-crossref.yaml",
+          "--metadata=lang=de-DE",
+          "--wrap=none",
+          "--parse-raw",
+          "--latex-engine=xelatex",
+          "-V", "documentclass:scrreprt",
+          "-V", "classoption:headsepline, listof=nochaptergap, listof=flat, listof=totoc",
+          "-V", "mainfont:STIX Two Text",
+          "-V", "mathfont:STIX Two Math",
+          "-V", "fontsize:11pt",
+          "-V", "langoptions:babelshorthands=true",
+          "-V", "geometry:left=3cm, right=2.5cm, top=3cm, bottom=2.5cm",
+          "-V", "lof:true",
+          "-V", "papersize:a4paper",
+          "-V", "lang:de-DE",
+          "-V", "linestretch:1.25",
+          "-V", "lot:true",
+          "-V", "lol:true"
+          ]
+      },
+
+
+      "reveal.js": {
         "scope": {
           "text.html": "html",
           "text.html.markdown": "markdown"
         },
-        // use to place the output in the same directory as the curent file
-        // if -o or --output are set in "pandoc-arguments" this is ignored
-        // "out-local": true,
+        "out-local": true,
+        "out-ext": "html",
         "pandoc-arguments": [
-          "-t", "pdf"
-          // use --latex-engine=engine where engine is
-          // pdflatex|lualatex|xelatex. This may need to be specified with a
-          // full path, e.g. on a mac with BasicTeX
-          // "--latex-engine=/usr/texbin/pdflatex"
-          // or on Windows with MiKTeX
-          // "--latex-engine=C:/Program Files (x86)/MiKTeX 2.9/miktex/bin/pdflatex.exe"
-          // if -o or --output missing, will write to a temporary file
-          // "--output=~/Downloads/output.pdf"
-        ]
+          "-t", "revealjs",
+          "-s",
+          "-V", "theme=masterarbeit",
+          "--template=templates/revealjstemplate.html",
+          "--include-after-body=templates/headerfooter.html"
+          // "-V", "headerfooter=templates/headerfooter.html",
+          // "-V", "controls:true", // Display controls in the bottom right corner
+          // "-V", "progress:true", // Display a presentation progress bar
+          // "-V", "slideNumber:false", // Display the page number of the current slide
+          // "-V", "history:false", // Push each slide change to the browser history
+          // "-V", "keyboard:true", // Enable keyboard shortcuts for navigation
+          // "-V", "overview:true", // Enable the slide overview mode
+          // "-V", "center:true", // Vertical centering of slides
+          // "-V", "touch:true", // Enables touch navigation on devices with touch input
+          // "-V", "loop:false", // Loop the presentation
+          // "-V", "rtl:false", // Change the presentation direction to be RTL
+          // "-V", "shuffle:false", // Randomizes the order of slides each time the presentation loads
+          // "-V", "fragments:true", // Turns fragments on and off globally
+          // "-V", "embedded:false", // Flags if the presentation is running in an embedded mode, // i.e. contained within a limited portion of the screen
+          // "-V", "help:true", // Flags if we should show a help overlay when the questionmark // key is pressed
+          // "-V", "showNotes:false", // Flags if speaker notes should be visible to all viewers
+          // "-V", "autoSlide:0", // Number of milliseconds between automatically proceeding to the // next slide, disabled when set to 0, this value can be overwritten // by using a data-autoslide attribute on your slides
+          // "-V", "autoSlideStoppable: true", // Stop auto-sliding after user input
+          // "-V", "autoSlideMethod: Reveal.navigateNext", // Use this method for navigation when auto-sliding
+          // "-V", "mouseWheel: false", // Enable slide navigation via mouse wheel
+          // "-V", "hideAddressBar: true", // Hides the address bar on mobile devices
+          // "-V", "previewLinks: false", // Opens links in an iframe preview overlay
+          // "-V", "transition: 'slide'", // none/fade/slide/convex/concave/zoom // Transition style
+          // "-V", "transitionSpeed: 'default'", // default/fast/slow // Transition speed
+          // "-V", "backgroundTransition: 'fade'", // none/fade/slide/convex/concave/zoom // Transition style for full page slide backgrounds
+          // "-V", "viewDistance: 3", // Number of slides away from the current that are visible
+          // "-V", "parallaxBackgroundImage: ''", // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"// Parallax background image
+          // "-V", "parallaxBackgroundSize: ''", // CSS syntax, e.g. "2100px 900px"// Parallax background size
+          // "-V", "parallaxBackgroundHorizontal: null", // Number of pixels to move the parallax background per slide // - Calculated automatically unless specified // - Set to 0 to disable movement along an axis
+          // "-V", "parallaxBackgroundVertical: null"
+          ]
       },
+
 
       "Microsoft Word": {
         "scope": {
@@ -86,85 +199,48 @@
           "text.html.markdown": "markdown"
         },
         "pandoc-arguments": [
-          "-t", "docx"
-          // if -o or --output missing, will write to a temporary file
-          // "--output=~/Downloads/output.pdf"
+          "-t", "docx",
+          "-o", "neger.docx"
         ]
-      },
+      }
 
-      "PDF TOC (Narrow margins)": {
-        "scope": {
-          "text.html": "html",
-          "text.html.markdown": "markdown",
-          },
-        "pandoc-arguments": [
-          "-V", "geometry:margin=1.25in",
-          "-s", "--toc", "--number-sections", "--parse-raw",
-          "-t", "pdf",
-        ],
-      },
 
-      "PDF TOC": {
-        "scope": {
-          "text.html": "html",
-          "text.html.markdown": "markdown",
-          },
-        "pandoc-arguments": [
-          "-s", "--toc", "--number-sections", "--parse-raw",
-          "-t", "pdf",
-         ],
-      },
+      // "Beamer Slides (PDF)": {
+      //   "scope": {
+      //     "text.html": "html",
+      //     "text.html.markdown": "markdown",
+      //   },
+      //   // Use the "out-ext" parameter to define a custom output file extension. Commonly used for pdf.
+      //   "out-ext": "pdf",
+      //   "pandoc-arguments": [
+      //     "-t", "beamer",
+      //     "--latex-engine=C:/Program Files (x86)/MiKTeX 2.9/miktex/bin/pdflatex.exe"
+      //   ]
+      // },
 
-      "HTML TOC": {
-        "new-buffer": 1,
-        "scope": {
-          "text.html.markdown": "markdown"
-        },
-        "syntax_file": "Packages/HTML/HTML.tmLanguage",
-        "pandoc-arguments": [
-          "--to=html5",
-          "--no-highlight",
-          "-s", "--toc"
-        ]
-      },
+      // "Beamer Slides (LaTeX)": {
+      //   "scope": {
+      //     "text.html": "html",
+      //     "text.html.markdown": "markdown",
+      //   },
+      //   "pandoc-arguments": [
+      //     "-t", "beamer",
+      //   ]
+      // },
 
-      "Beamer Slides (PDF)": {
-        "scope": {
-          "text.html": "html",
-          "text.html.markdown": "markdown",
-        },
-        // Use the "out-ext" parameter to define a custom output file extension. Commonly used for pdf.
-        "out-ext": "pdf",
-        "pandoc-arguments": [
-          "-t", "beamer",
-          "--latex-engine=C:/Program Files (x86)/MiKTeX 2.9/miktex/bin/pdflatex.exe"
-        ]
-      },
+    //   "s5 Slides": {
+    //     "scope": {
+    //       "text.html": "html",
+    //       "text.html.markdown": "markdown",
+    //     },
+    //     "pandoc-arguments": [
+    //       "-t", "slidy", "-s", "--self-contained",
+    //     ]
+    //   },
 
-      "Beamer Slides (LaTeX)": {
-        "scope": {
-          "text.html": "html",
-          "text.html.markdown": "markdown",
-        },
-        "pandoc-arguments": [
-          "-t", "beamer",
-        ]
-      },
-
-      "s5 Slides": {
-        "scope": {
-          "text.html": "html",
-          "text.html.markdown": "markdown",
-        },
-        "pandoc-arguments": [
-          "-t", "slidy", "-s", "--self-contained",
-        ]
-      },
-    },
-    // these should not need to be customized
-
+  }, // transformations
     // output formats that are written to file, using -o parameter. These we do
     // not output to a sublime text buffer.
-    "pandoc-format-file": ["docx", "epub", "pdf", "odt", "beamer"]
+    "pandoc-format-file": ["docx", "epub", "pdf", "odt", "beamer", "html", "latex", "revealjs"]
   }
 }

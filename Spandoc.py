@@ -18,7 +18,7 @@ if __ST3:
 else:
     import minify_json
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
@@ -33,7 +33,7 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
         # get the user settings:
         settings = get_settings(view, folder_path, file_name)
-        # debug("settings: " + str(settings))
+        debug("settings: " + str(settings))
 
         # get transformation list for the current view
         self.transformation_list = self.get_transformation_list(settings, view)
@@ -78,10 +78,10 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
         debug("picked_transformation: " + picked_transformation)
 
         # execute the Spandoc command with passing the wanted/picked transformation
-        self.window.run_command('spandoc', {'transformation': picked_transformation })
+        self.window.run_command('spandoc_run', {'transformation': picked_transformation })
 
 
-class SpandocCommand(sublime_plugin.WindowCommand):
+class SpandocRunCommand(sublime_plugin.WindowCommand):
 
     '''Transforms using Spandoc.'''
 
@@ -309,12 +309,19 @@ def get_settings(view, folder_path=None, file_name=None):
 
     # Search for a folder settings file
     folder_settings_file = search_for_folder_settings_file("spandoc.json", folder_path, view.window())
+    # debug("folder_settings_file: " + str(folder_settings_file))
+
 
     # if there is a folder_settings_file, load its settings, else use either the user_settings_file or the default_settings_file
     if folder_settings_file:
         settings = load_folder_settings_file(folder_settings_file)
+        # debug("settings: " + str(settings))
+
     else:
         settings = sublime.load_settings('Spandoc.sublime-settings')
+        debug("Taking either the user_settings_file (if it exists) or the default_settings_file")
+        # debug("settings: " + str(settings))
+
 
         # only the default array is needed
         default = settings.get('default')
@@ -385,6 +392,7 @@ def search_for_folder_settings_file(file_name, folder_path, window=None):
                 return folder_settings_file
         else:
             debug("No!")
+            debug("There is no folder settings file")
             return None
 
 
@@ -393,12 +401,13 @@ def load_folder_settings_file(folder_settings_file):
     try:
         folder_settings_file = open(folder_settings_file, "r")
     except IOError as e:
-        sublime.error_message("Error: Spandoc-config exists, but could not be read. Exception: " + str(e))
+        sublime.error_message("Error: spandoc.json exists, but could not be read. Exception: " + str(e))
         folder_settings_file.close()
     else:
         settings_file_commented = folder_settings_file.read()
         folder_settings_file.close()
         settings_file = minify_json.json_minify(settings_file_commented)
+        debug("settings_file: " + str(settings_file))
         try:
             settings_file = json.loads(settings_file)
         except (KeyError, ValueError) as e:
