@@ -18,7 +18,7 @@ if __ST3:
 else:
     import minify_json
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
@@ -35,15 +35,15 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
         settings = get_settings(view, folder_path, file_name)
         debug("settings: " + str(settings))
 
-        self.transformation_list = self.get_transformation_list(settings, self.window)
+        # get transformation list for the current view
+        self.transformation_list = self.get_transformation_list(settings, view)
+
+        # show the transformation list with Sublimes "Quick Panel", and for the picked transformation the picked_transformation function will be executed, which will then pass the picked transformation to the SpandocCommand
         self.window.show_quick_panel(self.transformation_list, self.picked_transformation)
 
 
-    def get_transformation_list(self, settings, window):
+    def get_transformation_list(self, settings, view):
         '''Generates a ranked list of available transformations.'''
-
-        # returns the currently edited view.
-        view = window.active_view()
 
         # score the transformations and rank them
         ranked = {}
@@ -57,6 +57,7 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
         if not len(ranked):
             sublime.error_message('No transformations configured for the syntax '+ view.settings().get('syntax'))
+
             return
 
         # reverse sort
@@ -94,33 +95,45 @@ class SpandocCommand(sublime_plugin.WindowCommand):
 
         # get all the items from picked transformation out of the settings
         transformation = settings['transformations'][transformation]
+        # debug("transformations: " + str(transformation))
 
-        # debug("SpandocCommand: transformations" + str(transformation))
-
-        # string to work with
+        # string to work with (gets the whole file as text in buffer; selects the whole file)
         region = sublime.Region(0, view.size())
+        # debug("region: " + str(region))
         contents = view.substr(region)
+        # debug("contents: " + str(contents))
 
         # pandoc executable
-        binary_name = 'pandoc.exe' if sublime.platform() == 'windows' else 'pandoc'
-        pandoc = _find_binary(binary_name, settings['pandoc-path'])
-        if pandoc is None:
-            return
-        cmd = [pandoc]
+        pandoc_path = settings['pandoc-path']
+        if pandoc_path is None:
+            sublime.error_message('Could not find pandoc executable. Do you have set the "pandoc-path" parameter in the settings?')
+        # debug("pandoc_path: " + str(pandoc_path))
+        cmd = [pandoc_path]
 
-        # from format
+        # get pandoc's `--from` parameter:
+        # Non-pandoc extensions:  http://pandoc.org/MANUAL.html#non-pandoc-extensions
         score = 0
-        for scope, c_iformat in transformation['scope'].items():
+        for scope, non_pandoc_extensions in transformation['scope'].items():
             c_score = view.score_selector(0, scope)
+            # debug("c_score: " + str(c_score))
             if c_score <= score:
                 continue
             score = c_score
-            iformat = c_iformat
-        cmd.extend(['-f', iformat])
+            # debug("score: " + str(score))
+            # debug("non_pandoc_extensions: " + str(non_pandoc_extensions))
 
-        # configured parameters
-        args = Args(transformation['pandoc-arguments'])
-        # Use Spandoc output format name as file extension unless specified by out-ext in transformation
+        # add the pandoc's `--from` parameter:
+        cmd.extend(['-f', non_pandoc_extensions])
+        # debug("cmd: " + str(cmd))
+
+        pandoc_arguments = transformation['pandoc-arguments']
+        # debug("pandoc_arguments: " + str(pandoc_arguments))
+        # it is not really clear for me, why we need the process_pandoc_arguments function?
+        args = process_pandoc_arguments(pandoc_arguments)
+        # debug("args: " + str(args))
+
+
+        # Use pandoc output format name as file extension unless specified by out-ext in transformation
         try:
             transformation['out-ext']
         except:
@@ -131,7 +144,7 @@ class SpandocCommand(sublime_plugin.WindowCommand):
         oformat = args.get(short=['t', 'w'], long=['to', 'write'])
         oext = argsext
 
-        # Spandoc doesn't actually take 'pdf' as an output format
+        # pandoc doesn't actually take 'pdf' as an output format
         # see https://github.com/jgm/Spandoc/issues/571
         if oformat == 'pdf':
             args = args.remove(
@@ -164,18 +177,17 @@ class SpandocCommand(sublime_plugin.WindowCommand):
 
         cmd.extend(args)
 
-        # run Spandoc
-
+        # run pandoc in async mode
         sublime.set_timeout_async(lambda: self.pass_to_pandoc(cmd, folder_path, contents, oformat, transformation, output_path), 0)
 
-        # write Spandoc command to console
-        # print(' '.join(cmd))
-        # print(cmd)
+        # write pandoc command to console
+        debug("cmd: " + str(cmd))
 
 
     def pass_to_pandoc(self, cmd, folder_path, contents, oformat, transformation, output_path):
         process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
-        result, error = process.communicate(contents.encode('utf-8'))  # always waits for the output (buffering). But this is not a problem in a threaded enviroment like sublime.set_timeout_async!
+        # Next line always waits for the output (buffering). But this is not a problem in a threaded enviroment like sublime.set_timeout_async!
+        result, error = process.communicate(contents.encode('utf-8'))
 
         # handle Spandoc errors
         if error:
@@ -184,7 +196,7 @@ class SpandocCommand(sublime_plugin.WindowCommand):
             return
 
         # if write to file, open
-        # if oformat is not None and oformat in get_settings('Spandoc-format-file'):
+        # if oformat is not None and oformat in get_settings('pandoc-format-file'):
         #     try:
         #         if sublime.platform() == 'osx':
         #             subprocess.call(["open", output_path])
@@ -216,9 +228,9 @@ class SpandocCommand(sublime_plugin.WindowCommand):
         sublime.status_message("🚩🚩🚩 Spandoc DONE 🚩🚩🚩")
 
 
-class Args(list):
+class process_pandoc_arguments(list):
 
-    '''Process Spandoc arguments.
+    '''Process pandoc arguments.
 
     "short" are of the form "-k val""".
     "long" arguments are of the form "--key=val""".'''
@@ -242,7 +254,7 @@ class Args(list):
 
     def remove(self, short=None, long=None, values=None):
         '''Remove all matching arguments.'''
-        ret = Args([])
+        ret = process_pandoc_arguments([])
         value = None
         for arg in self:
             if short is not None:
@@ -270,30 +282,6 @@ def debug(theMessage):
 
     if DEBUG_MODE:
         print("Spandoc: " + str(theMessage))
-
-def err(e):
-    print("Spandoc ERROR: " + str(e))
-
-
-def _find_binary(name, default=None):
-    '''Returns a configure path or looks for an executable on the system path.
-    '''
-
-    if default is not None:
-        if os.path.exists(default):
-            return default
-        msg = 'configured path for {0} {1} not found.'.format(name, default)
-        sublime.error_message(msg)
-        return None
-
-    for dirname in os.environ['PATH'].split(os.pathsep):
-        path = os.path.join(dirname, name)
-        if os.path.exists(path):
-            return path
-
-    sublime.error_message('Could not find Spandoc executable on PATH.')
-    return None
-
 
 def get_current(window):
 
@@ -400,8 +388,7 @@ def load_folder_settings_file(folder_settings_file):
     try:
         folder_settings_file = open(folder_settings_file, "r")
     except IOError as e:
-        sublime.status_message("Error: Spandoc-config exists, but could not be read.")
-        err("Spandoc Exception: " + str(e))
+        sublime.error_message("Error: Spandoc-config exists, but could not be read. Exception: " + str(e))
         folder_settings_file.close()
     else:
         settings_file_commented = folder_settings_file.read()
@@ -410,8 +397,7 @@ def load_folder_settings_file(folder_settings_file):
         try:
             settings_file = json.loads(settings_file)
         except (KeyError, ValueError) as e:
-            sublime.status_message("JSON Error: Cannot parse spandoc.json. See console for details.")
-            err("uSpandoc Exception: " + str(e))
+            sublime.error_message("JSON Error: Cannot parse spandoc.json. See console for details. Exception: " + str(e))
             return None
         if "default" in settings_file:
             settings = settings_file["default"]
