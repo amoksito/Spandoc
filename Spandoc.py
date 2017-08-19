@@ -1,18 +1,11 @@
 import sublime
 import sublime_plugin
 from collections import OrderedDict
-import pprint
+# import pprint
 import re
 import subprocess
-import tempfile
+# import tempfile
 import os
-import shutil
-
-import json
-if __ST3:
-    import Pandown.minify_json as minify_json
-else:
-    import minify_json
 
 DEBUG_MODE = True
 
@@ -93,9 +86,9 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         settings = get_settings(view, folder_path)
 
         # gets pandoc executable from settings
-        pandoc_path = settings['pandoc-path']
+        pandoc_path = settings['pandoc_path']
         if pandoc_path is None:
-            sublime.error_message('Could not find pandoc executable. Do you have set the "pandoc-path" parameter in the settings?')
+            sublime.error_message('Could not find pandoc executable. Do you have set the "pandoc_path" parameter in the settings?')
         # debug("pandoc_path: " + str(pandoc_path))
 
         # start to form the pandoc command
@@ -112,10 +105,22 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         # debug("pandoc_arguments: " + str(pandoc_arguments))
 
 
+        # # input_format / `--from` parameter
+        # input_format = pandoc_arguments.get(short=['f', 'r'], long=['from', 'read'])
+        # if input_format is None:
+        #     sublime.error_message('Could not find Pandocs `--from` argument. Do you have set the `--from` argument inside the `pandoc-arguments` array in the settings?')
+        # # debug("input_format: " + str(input_format))
+
         # input_format / `--from` parameter
-        input_format = pandoc_arguments.get(short=['f', 'r'], long=['from', 'read'])
+        score = 0
+        for scope, input_format in transformation['scope'].items():
+            c_score = view.score_selector(0, scope)
+            if c_score <= score:
+                continue
+            score = c_score
+
         if input_format is None:
-            sublime.error_message('Could not find Pandocs `--from` argument. Do you have set the `--from` argument inside the `pandoc-arguments` array in the settings?')
+            sublime.error_message('Could not find Pandocs `--from` argument. Do you have set the scopes dictionary in the settings?')
         # debug("input_format: " + str(input_format))
 
         # add the pandoc's `--from` parameter to the pandocs command
@@ -306,16 +311,18 @@ def get_settings(view, folder_path=None):
         settings = load_folder_settings_file(folder_settings_file)
         # debug("settings: " + str(settings))
 
+        # only the default array is needed
+        default = settings.get('default')
+
     else:
         settings = sublime.load_settings('Spandoc.sublime-settings')
         debug("Taking either the user_settings_file (if it exists) or the default_settings_file")
         # debug("settings: " + str(settings))
 
-
         # only the default array is needed
         default = settings.get('default')
 
-        # but when there is a user array instead of a default array, then merrge the settings
+        # but when there is a user array instead of a default array, then merge the settings
         user = settings.get('user', {})
         if user:
             # merge each transformation
@@ -332,7 +339,7 @@ def get_settings(view, folder_path=None):
             # merge all other keys
             default.update(user)
 
-        settings = default
+    settings = default
     return settings
 
 
@@ -395,17 +402,15 @@ def load_folder_settings_file(folder_settings_file):
     else:
         settings_file_commented = folder_settings_file.read()
         folder_settings_file.close()
-        # settings_file = settings_file_commented
-        settings_file = minify_json.json_minify(settings_file_commented)
-        debug("settings_file: " + str(settings_file))
+        # debug("settings_file_commented: " + str(settings_file_commented))
+
         try:
-            settings_file = json.loads(settings_file)
+            settings_file = sublime.decode_value(settings_file_commented)
         except (KeyError, ValueError) as e:
             sublime.error_message("JSON Error: Cannot parse spandoc.json. See console for details. Exception: " + str(e))
             return None
-        if "default" in settings_file:
-            settings = settings_file["default"]
+        debug("settings_file: " + str(settings_file))
 
-    return settings
+    return settings_file
 
 
