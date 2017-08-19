@@ -2,11 +2,12 @@
 
 	"selector": "text.html.markdown",
 	"target": "spandoc_run",
-	"transformation": "HTML (No Template)",
+	"transformation": "HTML",
 
 	"variants":
 		[
 	    { "name": "PDF", "transformation": "PDF" },
+	    { "name": "HTML", "transformation": "HTML (No Template)" },
 	  ]
 
 }

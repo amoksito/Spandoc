@@ -24,32 +24,33 @@ MIT License, see `LICENSE.md`
 __Spandoc__ needs to know the command options for Pandoc. At least an input and an output format.
 
 - The input format is automatically taken from the scope under the cursor of the current document, when executing the [commands](#commands).
-- The output format is called a transformation in __Spandoc__. It must be configured in a settings file by defining the `transformations` array.
+- The output format must be configured in a settings file by defining the `transformations` array, see the [Configuring](#configuring) section.
 
-Two ways to start a Pandoc conversion:
+Start a Pandoc conversion:
 
-1. After configuring the transformations (see [Configuring](#configuring)) you can bring up the Sublime Command Palette (`ctrl+shift+p`) and execute the `Spandoc` command. Then you can choose a transformation label from the transformation list and the Pandoc conversion will begin.
-2. After configuring the `transformation` argument in a build system file, you can use Sublime's automatic build system (`Tools -> Build System -> Automatic`). The Pandoc conversion will begin when executing it (`ctrl+b`).
+1. You can bring up the Sublime Command Palette (default shortcut: `ctrl+shift+p`) and execute the `Spandoc` command. You will be presented with a list of transformations. After choosing a transformation label from the transformation list, the Pandoc conversion will begin. The list can be configured.
+2. You can use Sublime's automatic build system (`Tools -> Build System -> Automatic`). The Pandoc conversion will begin when executing it (default shortcut: `ctrl+b`). This is only pre-configured for Markdown to HTML and Markdown to PDF.
+3. You can use the internal `spandoc_run` command in your user keybindings file. This must be configured, see [Keybindings](#keybindings).
+
 
 ## Commands
 
-There are two commands: `Spandoc` and `Spandoc: Create Config` and the Sublime build system.
+There are three commands: `Spandoc Palette` and `Spandoc: Create Config` and the internal `spandoc_run` command.
 
-#### Spandoc
-Internal command name: `spandoc_palette`
+### Spandoc Palette
 
 The `Spandoc` command opens a command palette and lists the defined transformations from a settings file (in dependence of the scope under the cursor). Afer choosing one transformation label, the transformation will be passed to the internal `spandoc_run` command and the Pandoc conversion will begin.
 
 
-#### Spandoc: Create Config
-Internal command name: `spandoc_create_config`
+### Spandoc: Create Config
 
 This command creates the *Current folder settings file*. If available, it will copy the *user settings file*, otherwise the *default settings file* to the current folder (with the current document).
 
 
-### Sublime build system
+### spandoc_run
 
-The automatic build system of Sublime (`ctrl+b`) will pass the transformation label from the build system file straight to the internal `Spandoc_run` command and the Pandoc conversion will begin.
+The `spandoc_run` command gets the settings, forms the pandoc command, passes the pandoc command to Pandoc, catches/shows the results and failures and either write it to a file or displays it in Sublimes buffer.
+
 
 
 ## Settings structure
@@ -67,23 +68,50 @@ Listed in reverse precedence: Folder settings overwrite User settings overwrite 
 
 ## Configuring
 
-It is advised not to alter the *default settings file*, because on every new update it'll get overwritten. Copy the *default settings file* to the *user settings file*. Both can be found via the application menu, go to `Preferences -> Package Settings -> Spandoc`.
+It is advised not to alter the *default settings file*, because on every new update it gets overwritten. Copy the *default settings file* to the *user settings file*. Both can be found via the application menu: `Preferences -> Package Settings -> Spandoc`.
 
-In the *user settings file* you need to configure the path to the Pandoc executable. This can be done with the `pandoc-path` parameter. See the *default settings file* for default locations. 
+There are 2 possible top level setting keys, `user` and `default`. If you use `default` in your *user settings file*, the default settings will be overwritten, but if you use `user` your settings will be merged into the default settings.
 
-There are 2 possible top level settings keys, `user` and `default`. If you use `default` in your *user settings file*, the default settings will be overwritten, but if you use `user` your settings will be merged into the default settings.
+In the settings, you need to configure the path to the Pandoc executable. This can be done with the `pandoc-path` parameter. See the *default settings file* for default locations.
 
-With the `transformations` you define an output format for Pandoc. Every transformation needs at least:
+With the `transformations` array, you can define several different transformations. Every transformation needs at least:
 
-- transformation label
-- `scope` array
-- `pandoc-arguments` array with the `--to` parameter at minimum
+- transformation label/name
+- `pandoc-arguments` array with...
+	+ the `--from` argument
+	+ and the `--to` argument
 
-The transformation label is only a Name for the transformation. This name is for example displayed in the command palette and will be always used to choose the transformation. The `scope` array decides if the transformation can be applied (it is in fact a `--from` parameter). Maybe it is more reasonable to just take the syntax of the current file and not the scope under the cursor… The `--to` parameter, which must be inside the `pandoc-arguments` array is the `--to` parameter for Pandoc. Because of that it must follow the [naming rules](http://pandoc.org/MANUAL.html#options) by Pandoc, but propably it should have a similar name as the transformation label.
+The transformation label is only a Name for the transformation. This name is for example displayed in the command palette and will be always used to choose the transformation. The `--from` and `--to` arguments, plus any additional argument inside the `pandoc-arguments` array, must follow Pandocs [naming rules](http://pandoc.org/MANUAL.html#options). Propably the `--from` argument should have a similar name as the transformation label.
 
-Look in the [Pandoc User's Guide](http://pandoc.org/MANUAL.html) __every other possible Pandoc option can be used__ inside `pandoc-arguments`.
+For the pandoc commands the short version as well as the long version can be used. For example, the short version:  `"-o name_of_file"` or the long version: `"--output=name_of_file"`. Although the long version is preferred in this Sublime Plugin.
 
-## Keyboard shortcuts
+Like native Pandoc the conversion result goes to `stdout` by default. In __Spandoc__ and Sublime this means that it is written to the buffer (Buffer not yet implemented, it always writes to a file).
+
+The extension is taken from the corresponding output format, specified with the `--to` option. Howewer, the file extension can be specified with the `output_extension` parameter _outside_ the `pandoc-arguments` array. This is especially useful, where the `--to` option does not correspond with the extension, like in the case of reveal.js, where in Pandoc the command `--to=revealjs` must be given.
+
+
+For outputting to a file, use the `-output` option.
+When outputting to a file, the file will be written to the same folder as the input file, unless otherwise specified with the optional `set_path` option (`set_path` not yet implemented!). The output file will have the same name as the input file, unless otherwise specified with the `--output` option.
+
+
+
+
+
+
+Look in the [Pandoc User's Guide](http://pandoc.org/MANUAL.html). __Every other possible Pandoc option can be used__ inside `pandoc-arguments`.
+
+
+
+### Sublime build system
+
+The automatic build system of Sublime (`ctrl+b`) will pass the transformation label from the build system file straight to the internal `Spandoc_run` command and the Pandoc conversion will begin.
+
+After configuring the `transformation` argument in the build system file.
+
+
+
+
+## Keybindings
 
 No default keyboard shortcuts are predetermined, but you can easily configure them by using the internal command names:
 

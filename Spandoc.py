@@ -12,13 +12,14 @@ except:
     from Edit import Edit as Edit
 __ST3 = int(sublime.version()) >= 3000
 import shutil
+# import Pandown.json_minify
 import json
 if __ST3:
     import Pandown.minify_json as minify_json
 else:
     import minify_json
 
-DEBUG_MODE = False
+DEBUG_MODE = True
 
 class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
@@ -28,12 +29,12 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
         # return view, folder_path and filename from the current window
         view, folder_path, file_name = get_current(self.window)
-        debug("folder_path: " + folder_path)
-        debug("file_name: " + file_name)
+        # debug("folder_path: " + folder_path)
+        # debug("file_name: " + file_name)
 
         # get the user settings:
-        settings = get_settings(view, folder_path, file_name)
-        debug("settings: " + str(settings))
+        settings = get_settings(view, folder_path)
+        # debug("settings: " + str(settings))
 
         # get transformation list for the current view
         self.transformation_list = self.get_transformation_list(settings, view)
@@ -75,7 +76,7 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
         # get the name of the picked_transformation from the selected item "i":
         picked_transformation = self.transformation_list[i]
-        debug("picked_transformation: " + picked_transformation)
+        # debug("picked_transformation: " + picked_transformation)
 
         # execute the Spandoc command with passing the wanted/picked transformation
         self.window.run_command('spandoc_run', {'transformation': picked_transformation })
@@ -90,12 +91,79 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         # return currently edited view, dir and filename from the window
         view, folder_path, file_name = get_current(self.window)
 
+        # split the name of the file and its extension
+        file_name, output_extension = os.path.splitext(file_name)
+
         # get the user settings:
-        settings = get_settings(view, folder_path, file_name)
+        settings = get_settings(view, folder_path)
+
+        # gets pandoc executable from settings
+        pandoc_path = settings['pandoc-path']
+        if pandoc_path is None:
+            sublime.error_message('Could not find pandoc executable. Do you have set the "pandoc-path" parameter in the settings?')
+        # debug("pandoc_path: " + str(pandoc_path))
+
+        # start to form the pandoc command
+        pandoc_cmd = [pandoc_path]
 
         # get all the items from picked transformation out of the settings
         transformation = settings['transformations'][transformation]
         # debug("transformations: " + str(transformation))
+
+
+        pandoc_arguments = transformation['pandoc-arguments']
+        # debug("pandoc_arguments: " + str(pandoc_arguments))
+        pandoc_arguments = evaluate_short_long_arguments(pandoc_arguments)
+        # debug("pandoc_arguments: " + str(pandoc_arguments))
+
+
+        # input_format / `--from` parameter
+        input_format = pandoc_arguments.get(short=['f', 'r'], long=['from', 'read'])
+        if input_format is None:
+            sublime.error_message('Could not find Pandocs `--from` argument. Do you have set the `--from` argument inside the `pandoc-arguments` array in the settings?')
+        # debug("input_format: " + str(input_format))
+
+        # add the pandoc's `--from` parameter to the pandocs command
+        pandoc_cmd.extend(['-f', input_format])
+        # debug("pandoc_cmd: " + str(pandoc_cmd))
+
+        # output_format / `--to` parameter
+        output_format = pandoc_arguments.get(short=['t', 'w'], long=['to', 'write'])
+        if output_format is None:
+            sublime.error_message('Could not find Pandocs `--to` argument. Do you have set the `--to` argument inside the `pandoc-arguments` array in the settings?')
+        # debug("output_format: " + str(output_format))
+
+
+        # Display Result in Buffer (Buffer not yet implemented) or write to a file?
+        output_name = pandoc_arguments.get(short=['o'], long=['output'])
+
+        # display in Buffer (Buffer not yet implemented)
+        if output_name is None:
+                # The output file will have the same name as the input file, unless otherwise specified with the `--output` option.
+                output_name = file_name
+
+                # todo: buffer
+                # buffer_on = True
+                # for now, ALWAYS add the output parameter:
+                pandoc_arguments.extend(['-o', output_name])
+
+
+        debug("output_name: " + str(output_name))
+
+        # Use output_format as file extension, unless otherwise specified in the output_extension parameter
+        try:
+            transformation['output_extension']
+        except:
+            output_extension = output_format
+        else:
+            output_extension = transformation['output_extension']
+        debug("output_extension: " + str(output_extension))
+
+        # add the extension to the name
+        output_name += "." + output_extension
+
+        # add the output_name to the pandoc command
+        pandoc_cmd.extend(pandoc_arguments)
 
         # string to work with (gets the whole file as text in buffer; selects the whole file)
         region = sublime.Region(0, view.size())
@@ -103,105 +171,28 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         contents = view.substr(region)
         # debug("contents: " + str(contents))
 
-        # pandoc executable
-        pandoc_path = settings['pandoc-path']
-        if pandoc_path is None:
-            sublime.error_message('Could not find pandoc executable. Do you have set the "pandoc-path" parameter in the settings?')
-        # debug("pandoc_path: " + str(pandoc_path))
-        cmd = [pandoc_path]
-
-        # get pandoc's `--from` parameter:
-        # Non-pandoc extensions:  http://pandoc.org/MANUAL.html#non-pandoc-extensions
-        score = 0
-        for scope, non_pandoc_extensions in transformation['scope'].items():
-            c_score = view.score_selector(0, scope)
-            # debug("c_score: " + str(c_score))
-            if c_score <= score:
-                continue
-            score = c_score
-            # debug("score: " + str(score))
-            # debug("non_pandoc_extensions: " + str(non_pandoc_extensions))
-
-        # add the pandoc's `--from` parameter:
-        cmd.extend(['-f', non_pandoc_extensions])
-        # debug("cmd: " + str(cmd))
-
-        pandoc_arguments = transformation['pandoc-arguments']
-        # debug("pandoc_arguments: " + str(pandoc_arguments))
-        # it is not really clear for me, why we need the process_pandoc_arguments function?
-        args = process_pandoc_arguments(pandoc_arguments)
-        # debug("args: " + str(args))
-
-
-        # Use pandoc output format name as file extension unless specified by out-ext in transformation
-        try:
-            transformation['out-ext']
-        except:
-            argsext = None
-        else:
-            argsext = transformation['out-ext']
-        # output format
-        oformat = args.get(short=['t', 'w'], long=['to', 'write'])
-        oext = argsext
-
-        # pandoc doesn't actually take 'pdf' as an output format
-        # see https://github.com/jgm/Spandoc/issues/571
-        if oformat == 'pdf':
-            args = args.remove(
-                short=['t', 'w'], long=['to', 'write'], values=['pdf'])
-
-        # output file locally
-        try:
-            transformation['out-local']
-        except:
-            out_local = None
-        else:
-            out_local = transformation['out-local']
-
-        # if write to file, add -o if necessary, set file name to output name
-        # but the file name needs to be without an extension. the extension will be added in accordance with the to/output format
-        file_name, file_extension = os.path.splitext(file_name)
-        output_name = None
-        if oformat is not None and oformat in settings['pandoc-format-file']:
-            output_name = args.get(short=['o'], long=['output'])
-            # debug("output_name: " + str(output_name))
-            if output_name is None:
-                # note the file extension matches the pandoc format name
-                if out_local and file_name:
-                    output_name = file_name
-                    # debug("output_name: " + str(output_name))
-                else:
-                    output_name = tempfile.NamedTemporaryFile().name
-                # If a specific output format not specified in transformation, default to pandoc format name
-                if oext is None:
-                    output_name += "." + oformat
-                else:
-                    output_name += "." + oext
-                # debug("output_name: " + str(output_name))
-                args.extend(['-o', output_name])
-
-        cmd.extend(args)
-
-        # run pandoc in async mode
-        sublime.set_timeout_async(lambda: self.pass_to_pandoc(cmd, folder_path, contents, oformat, transformation, output_name), 0)
+        # Pass the pandoc_cmd to Pandoc and run Pandoc in async mode
+        sublime.set_timeout_async(lambda: self.pass_to_pandoc(pandoc_cmd, folder_path, contents, output_format, transformation, output_name), 0)
 
         # write pandoc command to console
-        debug("cmd: " + str(cmd))
+        debug("pandoc_cmd: " + str(pandoc_cmd))
 
 
-    def pass_to_pandoc(self, cmd, folder_path, contents, oformat, transformation, output_name):
-        process = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
-        # Next line always waits for the output (buffering). But this is not a problem in a threaded enviroment like sublime.set_timeout_async!
+    def pass_to_pandoc(self, pandoc_cmd, folder_path, contents, output_format, transformation, output_name):
+        process = subprocess.Popen(pandoc_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
+
+        # Next line always waits for the output (buffering)
+        # if there is an result pandoc has put the conversion in stdout, when result is empty it has written to a file
         result, error = process.communicate(contents.encode('utf-8'))
 
-        # handle Spandoc errors
+        # Handle Pandoc errors
         if error:
-            sublime.error_message('\n\n'.join(['Error when running:', ' '.join(cmd), error.decode('utf-8').strip()]))
-            # print('\n\n'.join(['Error when running:', ' '.join(cmd), error.decode('utf-8').strip()]))  # just display errors in the console windows
+            sublime.error_message('\n\n'.join(['Error when running:', ' '.join(pandoc_cmd), error.decode('utf-8').strip()]))
             return
 
+
         # if write to file, open
-        # if oformat is not None and oformat in get_settings('pandoc-format-file'):
+        # if output_format is not None and output_format in get_settings('pandoc-format-file'):
         #     try:
         #         if sublime.platform() == 'osx':
         #             subprocess.call(["open", output_name])
@@ -214,31 +205,31 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         #     return
 
         # write to buffer
-        if result:
-            if transformation['new-buffer']:
-                w = self.view.window()
-                w.new_file()
-                view = w.active_view()
-                region = sublime.Region(0, view.size())
-            else:
-                view = self.view
-                region = sublime.Region(0, view.size())
+        # if result:
+        #     if transformation['new-buffer']:
+        #         w = self.view.window()
+        #         w.new_file()
+        #         view = w.active_view()
+        #         region = sublime.Region(0, view.size())
+        #     else:
+        #         view = self.view
+        #         region = sublime.Region(0, view.size())
 
-            with Edit(view) as edit:
-                edit.replace(region, result.decode('utf8').replace('\r\n','\n'))
+        #     with Edit(view) as edit:
+        #         edit.replace(region, result.decode('utf8').replace('\r\n','\n'))
 
-            view.set_syntax_file(transformation['syntax_file'])
+        #     view.set_syntax_file(transformation['syntax_file'])
 
         # Output Status message done:
-        sublime.status_message("🚩🚩🚩 Spandoc DONE 🚩🚩🚩")
+        sublime.status_message("Spandoc DONE")
 
 
-class process_pandoc_arguments(list):
+class evaluate_short_long_arguments(list):
 
     '''Process pandoc arguments.
 
-    "short" are of the form "-k val""".
-    "long" arguments are of the form "--key=val""".'''
+    "short" form: "-k val"
+    "long" form:  "--key=val"   '''
 
     def get(self, short=None, long=None):
         '''Get the first value for a argument.'''
@@ -259,7 +250,7 @@ class process_pandoc_arguments(list):
 
     def remove(self, short=None, long=None, values=None):
         '''Remove all matching arguments.'''
-        ret = process_pandoc_arguments([])
+        ret = evaluate_short_long_arguments([])
         value = None
         for arg in self:
             if short is not None:
@@ -304,7 +295,7 @@ def get_current(window):
     return (view, folder_path, file_name)
 
 
-def get_settings(view, folder_path=None, file_name=None):
+def get_settings(view, folder_path=None):
     '''Return a settings file with the highest precedence: '''
 
     # Search for a folder settings file
@@ -406,8 +397,9 @@ def load_folder_settings_file(folder_settings_file):
     else:
         settings_file_commented = folder_settings_file.read()
         folder_settings_file.close()
+        # settings_file = settings_file_commented
         settings_file = minify_json.json_minify(settings_file_commented)
-        debug("settings_file: " + str(settings_file))
+        # debug("settings_file: " + str(settings_file))
         try:
             settings_file = json.loads(settings_file)
         except (KeyError, ValueError) as e:
