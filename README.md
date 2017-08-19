@@ -10,11 +10,10 @@ __Spandoc__ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin 
 MIT License, see `LICENSE.md`
 
 
-
 ## Installation
 
 - [Install Pandoc](http://pandoc.org/installing.html)
-- Install __Spandoc__ by either use:
+- Install __Spandoc__ by either:
   + [Package Control](https://packagecontrol.io/): Run the command: `Package Control: Install Package` and find `Spandoc`.
   + Github: clone or download the [Spandoc repository](https://github.com/geniusupgrader/Spandoc) into your Sublime (loose) packages directory (use the menu `Preferences->Browse Packages…` to find this folder)
 
@@ -49,7 +48,7 @@ This command creates the *Current folder settings file*. If available, it will c
 
 ### spandoc_run
 
-The `spandoc_run` command gets the settings, forms the pandoc command, passes the pandoc command to Pandoc, catches/shows the results and failures and either write it to a file or displays it in Sublimes buffer.
+The `spandoc_run` is the core of __Spandoc__: it gets the settings, forms the pandoc command, passes the pandoc command to Pandoc, catches/shows the results and failures and either write it to a file or displays it in Sublimes buffer (buffer not yet implemented).
 
 
 
@@ -135,7 +134,7 @@ You can even execute the internal command: `spandoc_run` with a keybinding, pass
 
 ## Contributing
 
-TODO
+Contributing notes will follow
 
 No Sublime 2 support.
 

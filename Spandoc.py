@@ -6,13 +6,8 @@ import re
 import subprocess
 import tempfile
 import os
-try:
-    from.Edit import Edit as Edit
-except:
-    from Edit import Edit as Edit
-__ST3 = int(sublime.version()) >= 3000
 import shutil
-# import Pandown.json_minify
+
 import json
 if __ST3:
     import Pandown.minify_json as minify_json
@@ -49,7 +44,7 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
         # score the transformations and rank them
         ranked = {}
         for label, setting in settings['transformations'].items():
-            for scope in setting['scope'].keys():
+            for scope in setting['scope']:
                 score = view.score_selector(0, scope)
                 if not score:
                     continue
@@ -148,8 +143,6 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
                 pandoc_arguments.extend(['-o', output_name])
 
 
-        debug("output_name: " + str(output_name))
-
         # Use output_format as file extension, unless otherwise specified in the output_extension parameter
         try:
             transformation['output_extension']
@@ -161,8 +154,13 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
 
         # add the extension to the name
         output_name += "." + output_extension
+        debug("output_name: " + str(output_name))
 
         # add the output_name to the pandoc command
+        pandoc_arguments.extend(['-o', output_name])
+
+
+        # add all othern pandoc arguments to the pandoc command!
         pandoc_cmd.extend(pandoc_arguments)
 
         # string to work with (gets the whole file as text in buffer; selects the whole file)
@@ -399,7 +397,7 @@ def load_folder_settings_file(folder_settings_file):
         folder_settings_file.close()
         # settings_file = settings_file_commented
         settings_file = minify_json.json_minify(settings_file_commented)
-        # debug("settings_file: " + str(settings_file))
+        debug("settings_file: " + str(settings_file))
         try:
             settings_file = json.loads(settings_file)
         except (KeyError, ValueError) as e:
