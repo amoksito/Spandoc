@@ -19,7 +19,7 @@ class SpandocCreateConfigCommand(sublime_plugin.WindowCommand):
             return
 
         defaultConfigFile = os.path.join(sublime.packages_path(), 'spandoc', 'spandoc.sublime-settings')
-        userConfigFile = os.path.join(sublime.packages_path(), 'User', 'pandoc-config.json')
+        userConfigFile = os.path.join(sublime.packages_path(), 'User', 'spandoc.sublime-settings')
 
         if not os.path.exists(defaultConfigFile) and not os.path.exists(userConfigFile):
             try:
