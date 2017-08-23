@@ -29,11 +29,6 @@
 
                             {
                                 "command": "open_file",
-                                "args": {"file": "${packages}/Spandoc/Spandoc.sublime-build"},
-                                "caption": "Build – Default"
-                            },
-                            {
-                                "command": "open_file",
                                 "args": {"file": "${packages}/User/Spandoc.sublime-build"},
                                 "caption": "Build – User"
                             },
