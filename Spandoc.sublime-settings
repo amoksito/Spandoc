@@ -11,7 +11,7 @@
     //    "pandoc_path": "/usr/local/bin/pandoc",
     // -  windows
     //    "pandoc_path": "C:/Users/[username]/AppData/Local/Pandoc/pandoc.exe",
-    "pandoc_path": "C:/Users/robin/AppData/Roaming/cabal/bin/pandoc.exe",
+    "pandoc_path": "",
 
 
     // transformations

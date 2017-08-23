@@ -12,17 +12,17 @@
                 "children":
                 [
                     {
-                        "caption": "Pandoc",
+                        "caption": "Spandoc",
                         "children":
                         [
                             {
-                                "command": "open_file", 
-                                "args": {"file": "${packages}/Pandoc/Pandoc.sublime-settings"},
+                                "command": "open_file",
+                                "args": {"file": "${packages}/Spandoc/Spandoc.sublime-settings"},
                                 "caption": "Settings – Default"
                             },
                             {
-                                "command": "open_file", 
-                                "args": {"file": "${packages}/User/Pandoc.sublime-settings"},
+                                "command": "open_file",
+                                "args": {"file": "${packages}/User/Spandoc.sublime-settings"},
                                 "caption": "Settings – User"
                             },
                             { "caption": "-" }
