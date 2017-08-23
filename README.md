@@ -132,20 +132,6 @@ You can even execute the internal command: `spandoc_run` with a keybinding, pass
 ```
 
 
-## To-do list
-
-- [ ] Add nice gifs in `Readme.md`
-- [ ] Open the html file automatically or with keybinding after the conversion has finished
-- [ ] There should be an option to disable the overwriting of existing files with the alternative to create renumbered documents.
-- [ ] Add [CriticMarkup](http://criticmarkup.com/) support?
-- [ ] Add easy possibility to show the Pandoc command, which may be copied into an console. Should output Pandoc command for Linux and Windows individually. On Windows quote characters ( `""`) must enclose the command (because of spaces) and must be escaped (`\" \"`), like so: `--variable=\"classoption:headsepline, listof=nochaptergap, listof=flat, listof=totoc\""`
-- [ ] What about own template files?
-- [x] Add build system
-- [x] Add status message (with flags) <22.03.2017 07:59:43>
-- [x] Add async <21.03.2017 18:10:56>
-
-
-
 ## Contributing
 
 Contributing notes will follow
