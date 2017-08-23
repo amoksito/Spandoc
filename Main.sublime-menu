@@ -25,8 +25,20 @@
                                 "args": {"file": "${packages}/User/Spandoc.sublime-settings"},
                                 "caption": "Settings – User"
                             },
+                            { "caption": "-" },
+
+                            {
+                                "command": "open_file",
+                                "args": {"file": "${packages}/Spandoc/Spandoc.sublime-build"},
+                                "caption": "Build – Default"
+                            },
+                            {
+                                "command": "open_file",
+                                "args": {"file": "${packages}/User/Spandoc.sublime-build"},
+                                "caption": "Build – User"
+                            },
                             { "caption": "-" }
-                        ]
+                            ]
                     }
                 ]
             }
