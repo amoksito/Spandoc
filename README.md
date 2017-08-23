@@ -7,14 +7,14 @@ __Spandoc__ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin 
 
 ## License
 
-MIT License, see `LICENSE.md`
+MIT License, see [`LICENSE.md`](https://github.com/geniusupgrader/Spandoc/blob/master/LICENSE.md)
 
 
 ## Installation
 
 - [Install Pandoc](http://pandoc.org/installing.html)
 - Install __Spandoc__ by either:
-  + [Package Control](https://packagecontrol.io/): Run the command: `Package Control: Install Package` and find `Spandoc`.
+  + [Package Control](https://packagecontrol.io/packages/Spandoc): Run the command: `Package Control: Install Package` and find `Spandoc`.
   + Github: clone or download the [Spandoc repository](https://github.com/geniusupgrader/Spandoc) into your Sublime (loose) packages directory (use the menu `Preferences->Browse Packages…` to find this folder)
 
 
@@ -36,7 +36,7 @@ Start a Pandoc conversion:
 
 There are three commands: `Spandoc Palette` and `Spandoc: Create Config` and the internal `spandoc_run` command.
 
-### Spandoc Palette
+### Spandoc: Palette
 
 The `Spandoc` command opens a command palette and lists the defined transformations from a settings file (in dependence of the scope under the cursor). Afer choosing one transformation label, the transformation will be passed to the internal `spandoc_run` command and the Pandoc conversion will begin.
 
@@ -110,7 +110,7 @@ After configuring the `transformation` argument in the build system file.
 
 
 
-## Keybindings
+### Keybindings
 
 No default keyboard shortcuts are predetermined, but you can easily configure them by using the internal command names:
 
@@ -130,6 +130,20 @@ You can even execute the internal command: `spandoc_run` with a keybinding, pass
   "args": {"transformation": "HTML"}
 },
 ```
+
+
+## To-do list
+
+- [] Add nice gifs in `Readme.md`
+- [] Open the html file automatically or with keybinding after the conversion has finished
+- [] There should be an option to disable the overwriting of existing files with the alternative to create renumbered documents.
+- [] Add [CriticMarkup](http://criticmarkup.com/) support?
+- [] Add easy possibility to show the Pandoc command, which may be copied into an console. Should output Pandoc command for Linux and Windows individually. On Windows quote characters ( `""`) must enclose the command (because of spaces) and must be escaped (`\" \"`), like so: `--variable=\"classoption:headsepline, listof=nochaptergap, listof=flat, listof=totoc\""`
+- [] What about own template files?
+- [x] Add build system
+- [x] Add status message (with flags) <22.03.2017 07:59:43>
+- [x] Add async <21.03.2017 18:10:56>
+
 
 
 ## Contributing
