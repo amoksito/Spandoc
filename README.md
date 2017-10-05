@@ -3,7 +3,10 @@
 A [Sublime Text](https://www.sublimetext.com/) plugin that uses the infamous open-source parser [Pandoc](http://pandoc.org/) to convert text in nearly every possible format into each other.
 With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Markdown](http://pandoc.org/MANUAL.html#pandocs-markdown) and with __Spandoc__ you can use it inside Sublime Text!
 
-__Spandoc__ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](https://packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](https://github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). __Spandoc__ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette functionality, taking the "project" configuration system by Pandown and adding entirely new features, this is __Spandoc__. The code base is healily cleared and refactored. This plugin is in active development and of course, it is used by myself.
+__Spandoc__ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](https://packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](https://github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). __Spandoc__ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette functionality, taking the "project" configuration system by Pandown and adding entirely new features. The code base is heavily cleared and refactored. This plugin is in development and of course __Spandoc__ is used by myself.
+
+No Sublime 2 support. Mainly tested on Windows. On Linux currently not working?
+
 
 ## License
 
@@ -39,16 +42,17 @@ This command creates the Current folder settings file. If available, it will cop
 The `spandoc_run` is the core of __Spandoc__: it gets the settings, forms the pandoc command, passes the pandoc command to Pandoc, catches/shows the results and failures and either write it to a file or displays it in Sublimes buffer (buffer not yet implemented).
 
 
-
 ## Settings structure
 
-Listed in reverse precedence: Folder settings overwrite User settings overwrite default settings.
+
+Listed in the order of loading.
 
 - Default settings file `spandoc.sublime-settings`, located inside the package directory of Sublime inside the __Spandoc__ folder
 - User settings file `spandoc.sublime-settings`, located inside the user directory of Sublime.
 - Folder settings file `spandoc.json`, located inside the current folder (optional)
 - User build system file `Spandoc.sublime-build`, located inside the user directory of Sublime (optional)
 
+Settings at the bottom of this list take precedence over the entries above. Folder settings overwrite User settings overwrite default settings.
 
 
 ## Configuring
@@ -66,7 +70,7 @@ __Spandoc__ needs to know the command options for Pandoc. At least an input and 
 
 - transformation label/name
 - `pandoc-arguments` array with...
-	+ the `--to` argument
+  + the `--to` argument
 
 The transformation label is only a Name for the transformation. This name is for example displayed in the command palette and will be always used to choose the transformation. The `--to` argument, plus any additional argument inside the `pandoc-arguments` array, must follow Pandocs [naming rules](http://pandoc.org/MANUAL.html#options).
 
@@ -145,6 +149,5 @@ You can even execute the internal command: `spandoc_run` with a keybinding, pass
 
 Contributing notes will follow.
 Code of Conduct will follow.
-No Sublime 2 support.
-Mainly tested on Windows.
+
 
