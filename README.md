@@ -24,7 +24,7 @@ MIT License, see [`LICENSE.md`](https://github.com/geniusupgrader/Spandoc/blob/m
 
 ## Commands
 
-There are three commands: `Spandoc Palette` and `Spandoc: Create Config` and the internal `spandoc_run` command.
+There are three commands: `Spandoc Palette` and `Spandoc: Config` and the internal `spandoc_run` command.
 
 
 ### Spandoc: Palette
@@ -32,9 +32,9 @@ There are three commands: `Spandoc Palette` and `Spandoc: Create Config` and the
 - Bring up the Sublime Command Palette (default shortcut: `ctrl+shift+p`) and execute the `Spandoc: Palette` command. In dependence of the scope under the cursor, a list of defined transformations from a settings file will be persented. After choosing one label from from the transformation list, the transformation label will be passed to the internal `spandoc_run` command and the Pandoc conversion will begin. The list can be configured, see the [Configuring](#configuring) section.
 
 
-### Spandoc: Create Config
+### Spandoc: Config
 
-This command creates the Current folder settings file. If available, it will copy the user settings file, otherwise the default settings file to the current folder (with the current document).
+This command creates a current folder settings file (called `spandoc.json`), by copying it either from the user settings file or from the default settings file. After creating, it will open immediately. When there is already a `spandoc.json` file, it does _not_ overwrite it, only opens it.
 
 
 ### spandoc_run

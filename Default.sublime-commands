@@ -6,8 +6,8 @@
 
 
     {
-    	"caption": "Spandoc: Create Config",
-    	"command": "spandoc_create_config"
+    	"caption": "Spandoc: Config",
+    	"command": "spandoc_config"
     }
 
 

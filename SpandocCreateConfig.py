@@ -6,7 +6,7 @@ import shutil
 import codecs
 
 
-class SpandocCreateConfigCommand(sublime_plugin.WindowCommand):
+class SpandocConfigCommand(sublime_plugin.WindowCommand):
     def run(self):
         if self.window.active_view().file_name():
             configFile = os.path.join(os.path.dirname(self.window.active_view().file_name()), 'spandoc.json')
