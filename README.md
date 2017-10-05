@@ -5,7 +5,7 @@ With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Mark
 
 __Spandoc__ is composed of [Brian Fisher](https://github.com/tbfisher)'s plugin [„pandoc“](https://packagecontrol.io/packages/Pandoc) and of [Daniel P. Shannon](https://github.com/phyllisstein)'s plugin [Pandown](https://packagecontrol.io/packages/Pandown). __Spandoc__ came into existance to combine the strengths of these two plugins. Starting from the light code base by „pandoc“ and its command palette functionality, taking the "project" configuration system by Pandown and adding entirely new features. The code base is heavily cleared and refactored. This plugin is in development and of course __Spandoc__ is used by myself.
 
-No Sublime 2 support. Mainly tested on Windows. On Linux currently not working?
+
 
 
 ## License
@@ -149,5 +149,5 @@ You can even execute the internal command: `spandoc_run` with a keybinding, pass
 
 Contributing notes will follow.
 Code of Conduct will follow.
-
+No Sublime 2 support
 
