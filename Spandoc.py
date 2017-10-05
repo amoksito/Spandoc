@@ -77,10 +77,10 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
     def run(self, transformation):
 
         # return currently edited view, dir and filename from the window
-        view, folder_path, file_name = get_current(self.window)
+        view, folder_path, file_name_with_ext = get_current(self.window)
 
         # split the name of the file and its extension
-        file_name, output_extension = os.path.splitext(file_name)
+        file_name, input_extension = os.path.splitext(file_name_with_ext)
 
         # get the user settings:
         settings = get_settings(view, folder_path)
@@ -91,7 +91,9 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
             sublime.error_message('Could not find pandoc executable. Do you have set the "pandoc_path" parameter in the settings?')
         # debug("pandoc_path: " + str(pandoc_path))
 
-        # start to form the pandoc command
+        # this pandoc_cmd is the command, which will be later passed to pandoc
+        # it is first constructed as a normal python list and then converted into a connected string
+        # the pandoc_cmd will be outputted to the console and should be used in the CLI as normal
         pandoc_cmd = [pandoc_path]
 
         # get all the items from picked transformation out of the settings
@@ -103,6 +105,9 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         # debug("pandoc_arguments: " + str(pandoc_arguments))
         pandoc_arguments = evaluate_short_long_arguments(pandoc_arguments)
         # debug("pandoc_arguments: " + str(pandoc_arguments))
+
+        # append the file name to the pandoc command
+        pandoc_cmd.extend([file_name_with_ext])
 
 
         # # input_format / `--from` parameter
@@ -127,6 +132,8 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         pandoc_cmd.extend(['-f', input_format])
         # debug("pandoc_cmd: " + str(pandoc_cmd))
 
+
+
         # output_format / `--to` parameter
         output_format = pandoc_arguments.get(short=['t', 'w'], long=['to', 'write'])
         if output_format is None:
@@ -145,10 +152,10 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
                 # todo: buffer
                 # buffer_on = True
                 # for now, ALWAYS add the output parameter:
-                pandoc_arguments.extend(['-o', output_name])
+                # pandoc_arguments.extend(['-o', output_name])
 
 
-        # Use output_format as file extension, unless otherwise specified in the output_extension parameter
+        # Use output_format as file output_extension, unless otherwise specified in the output_extension parameter
         try:
             transformation['output_extension']
         except:
@@ -157,12 +164,12 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
             output_extension = transformation['output_extension']
         debug("output_extension: " + str(output_extension))
 
-        # add the extension to the name
-        output_name += "." + output_extension
-        debug("output_name: " + str(output_name))
+        # add the output_extension to the name
+        output_name_with_ext = output_name + "." + output_extension
+        debug("output_name_with_ext: " + str(output_name_with_ext))
 
-        # add the output_name to the pandoc command
-        pandoc_arguments.extend(['-o', output_name])
+        # add the output_name_with_ext to the pandoc command
+        pandoc_arguments.extend(['-o', output_name_with_ext])
 
 
         # add all othern pandoc arguments to the pandoc command!
@@ -174,14 +181,17 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         contents = view.substr(region)
         # debug("contents: " + str(contents))
 
-        # Pass the pandoc_cmd to Pandoc and run Pandoc in async mode
-        sublime.set_timeout_async(lambda: self.pass_to_pandoc(pandoc_cmd, folder_path, contents, output_format, transformation, output_name), 0)
-
         # write pandoc command to console
+        pandoc_cmd = ' '.join(pandoc_cmd)
         debug("pandoc_cmd: " + str(pandoc_cmd))
+
+        # Pass the pandoc_cmd to Pandoc and run Pandoc in async mode
+        sublime.set_timeout_async(lambda: self.pass_to_pandoc(pandoc_cmd, folder_path, contents, output_format, transformation, output_name_with_ext), 0)
+
 
 
     def pass_to_pandoc(self, pandoc_cmd, folder_path, contents, output_format, transformation, output_name):
+
         process = subprocess.Popen(pandoc_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
 
         # Next line always waits for the output (buffering)
