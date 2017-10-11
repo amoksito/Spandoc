@@ -18,15 +18,15 @@ class SpandocConfigCommand(sublime_plugin.WindowCommand):
             self.window.open_file(configFile)
             return
 
-        defaultConfigFile = os.path.join(sublime.packages_path(), 'spandoc', 'spandoc.sublime-settings')
-        userConfigFile = os.path.join(sublime.packages_path(), 'User', 'spandoc.sublime-settings')
+        defaultConfigFile = os.path.join(sublime.packages_path(), 'spandoc', 'Spandoc.sublime-settings')
+        userConfigFile = os.path.join(sublime.packages_path(), 'User', 'Spandoc.sublime-settings')
 
         if not os.path.exists(defaultConfigFile) and not os.path.exists(userConfigFile):
             try:
-                s = sublime.load_resource("packages\spandoc\spandoc.sublime-settings")
+                s = sublime.load_resource("packages\spandoc\Spandoc.sublime-settings")
             except OSError as e:
                 sublime.status_message("Could not load default Pandoc configuration.")
-                print("[Spandoc could not find a default configuration file in Packages/Spandoc/spandoc.sublime-settings]")
+                print("[Spandoc could not find a default configuration file in Packages/Spandoc/Spandoc.sublime-settings]")
                 print("[Loading from the binary package resource file also failed.]")
                 print("[e: {0}]".format(e))
                 return
