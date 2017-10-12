@@ -7,9 +7,11 @@
   "default": {
 
     // path to the pandoc binary. Default locations per platform:
-    // -  mac
+    // -  linux:
     //    "pandoc_path": "/usr/local/bin/pandoc",
-    // -  windows
+    //    or when pandoc is in the path simply: "pandoc_path": "pandoc",
+
+    // -  windows:
     //    "pandoc_path": "C:/Users/[username]/AppData/Local/Pandoc/pandoc.exe",
     "pandoc_path": "",
 

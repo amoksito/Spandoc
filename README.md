@@ -88,6 +88,9 @@ When outputting to a file, the file will be written to the same folder as the in
 
 Look in the [Pandoc User's Guide](http://pandoc.org/MANUAL.html). __Every other possible Pandoc option can be used__ inside `pandoc-arguments`.
 
+Please pay attention on the format of the `spandoc.sublime-settings` file. It should be valid `json`. And when the commands contain spaces, the best method is to encapsulate them in escaped quotation marks, like this:
+
+
 
 
 ### Spandoc build system
