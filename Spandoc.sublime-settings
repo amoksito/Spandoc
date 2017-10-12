@@ -24,18 +24,18 @@
       // be a name related to the format of the output.
       "HTML": {
         // list of scopes: maps sublime scope to input format. If the input matches against the
-        // given scope, this transformation becomes available, list of scopes
-        // notice the use of non-pandoc-extension (http://pandoc.org/MANUAL.html#non-pandoc-extensions)
+        // given scope, this transformation becomes available
+        // notice the use of non-pandoc-extension inside the scope (http://pandoc.org/MANUAL.html#non-pandoc-extensions)
         "scope": {"text.html.markdown": "markdown+raw_tex+tex_math_single_backslash"},
         // optional: specifiy output extension, othwise it will be taken from the --to parameter
         // "output_extension": "html",
         "pandoc-arguments": [
-          // --to is a must:
+          // the parameter --to is a must:
           "--to=html",
           // for outputting to a file, otherwise it will go to stdout/buffer (buffer not yet implemented)
           "--output",
-          // or for specifying the output file name (specify without extension, because extension is taken --to argument)
-          // "--output=iamconvertedmarkdownfile",
+          // or for specifying the output file name (do not use extension here)
+          // "--output=name",
           // with --standalone uses (default) template system
           "--standalone"
         ]
@@ -50,42 +50,40 @@
       },
 
 
-      "PDF": {
-        "scope": {"text.html": "html", "text.html.markdown": "markdown"},
-        "pandoc-arguments": [
-          "--to=pdf",
-          "--standalone",
-
-          // example of additional parameters:
-          "--toc",
-          "--number-sections",
-          "--wrap=none",
-          "--parse-raw",
-          "--latex-engine=xelatex",
-          "-v", "fontsize:11pt",
-          "-v", "papersize:a4paper"
-          ]
-      },
-
-
       "Latex": {
         "scope": {"text.html": "html", "text.html.markdown": "markdown"},
         "pandoc-arguments": [
           "--to=latex",
           "--standalone",
-
-
           // example of additional parameters:
           "--toc",
           "--number-sections",
           "--wrap=none",
           "--parse-raw",
           "--latex-engine=xelatex",
-          "-v", "fontsize:11pt",
-          "-v", "papersize:a4paper"
+          "--variable=fontsize:11pt",
+          "--variable=papersize:a4paper"
           ]
       },
 
+      // PDF is same as latex, except for the line: "output_extension": "pdf",
+      "PDF": {
+        "scope": {"text.html": "html", "text.html.markdown": "markdown"},
+        "output_extension": "pdf",
+        "pandoc-arguments": [
+
+          "--to=latex",
+          "--standalone",
+          // example of additional parameters:
+          "--toc",
+          "--number-sections",
+          "--wrap=none",
+          "--parse-raw",
+          "--latex-engine=xelatex",
+          "--variable=fontsize:11pt",
+          "--variable=papersize:a4paper"
+          ]
+      },
 
       "reveal.js": {
         "scope": {"text.html": "html", "text.html.markdown": "markdown"},
