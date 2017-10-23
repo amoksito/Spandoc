@@ -29,7 +29,7 @@ There are three commands: `Spandoc Palette` and `Spandoc: Config` and the intern
 
 ### Spandoc: Palette
 
-- Bring up the Sublime Command Palette (default shortcut: `ctrl+shift+p`) and execute the `Spandoc: Palette` command. In dependence of the scope under the cursor, a list of defined transformations from a settings file will be persented. After choosing one label from from the transformation list, the transformation label will be passed to the internal `spandoc_run` command and the Pandoc conversion will begin. The list can be configured, see the [Configuring](#configuring) section.
+Bring up the Sublime Command Palette (default shortcut: `ctrl+shift+p`) and execute the `Spandoc: Palette` command. In dependence of the scope under the cursor, a list of defined transformations from a settings file will be persented. After choosing one label from from the transformation list, the transformation label will be passed to the internal `spandoc_run` command and the Pandoc conversion will begin. The list can be configured, see the [Configuring](#configuring) section.
 
 
 ### Spandoc: Config
