@@ -200,7 +200,7 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
 
         # Handle Pandoc errors
         if error:
-            sublime.error_message('\n\n'.join(['Error when running:', ' '.join(pandoc_cmd), error.decode('utf-8').strip()]))
+            sublime.error_message('\n\n'.join(['Error when running:', ''.join(pandoc_cmd), error.decode('utf-8').strip()]))
             return
 
 
