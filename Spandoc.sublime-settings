@@ -26,7 +26,7 @@
         // list of scopes: maps sublime scope to input format. If the input matches against the
         // given scope, this transformation becomes available
         // notice the use of non-pandoc-extension inside the scope (http://pandoc.org/MANUAL.html#non-pandoc-extensions)
-        "scope": {"text.html.markdown": "markdown+raw_tex+tex_math_single_backslash"},
+        "scope": {"text.html.markdown": "markdown+tex_math_single_backslash"},
         // optional: specifiy output extension, othwise it will be taken from the --to parameter
         // "output_extension": "html",
         "pandoc-arguments": [
@@ -58,8 +58,6 @@
           // example of additional parameters:
           "--toc",
           "--number-sections",
-          "--wrap=none",
-          "--parse-raw",
           "--latex-engine=xelatex",
           "--variable=fontsize:11pt",
           "--variable=papersize:a4paper"
@@ -77,8 +75,6 @@
           // example of additional parameters:
           "--toc",
           "--number-sections",
-          "--wrap=none",
-          "--parse-raw",
           "--latex-engine=xelatex",
           "--variable=fontsize:11pt",
           "--variable=papersize:a4paper"
