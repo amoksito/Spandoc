@@ -11,7 +11,7 @@ DEBUG_MODE = True
 
 class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
-    '''Defines the plugin command palette item.'''
+    '''See README.md for more information on this command'''
 
     def run(self):
 
@@ -46,14 +46,12 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
         if not len(ranked):
             sublime.error_message('No transformations configured for the syntax '+ view.settings().get('syntax'))
-
             return
 
         # reverse sort
         transformation_list = list(OrderedDict(sorted(
             ranked.items(), key=lambda t: t[1])).keys())
         transformation_list.reverse()
-
         return transformation_list
 
 
@@ -72,7 +70,7 @@ class SpandocPaletteCommand(sublime_plugin.WindowCommand):
 
 class SpandocRunCommand(sublime_plugin.WindowCommand):
 
-    '''Transforms using Spandoc.'''
+    '''See README.md for more information on this command'''
 
     def run(self, transformation):
 
@@ -91,30 +89,21 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
             sublime.error_message('Could not find pandoc executable. Do you have set the "pandoc_path" parameter in the settings?')
         # debug("pandoc_path: " + str(pandoc_path))
 
-        # this pandoc_cmd is the command, which will be later passed to pandoc
-        # it is first constructed as a normal python list and then converted into a connected string
-        # the pandoc_cmd will be outputted to the console and should be used in the CLI as normal
-        pandoc_cmd = [pandoc_path]
-
         # get all the items from picked transformation out of the settings
         transformation = settings['transformations'][transformation]
         # debug("transformations: " + str(transformation))
-
 
         pandoc_arguments = transformation['pandoc-arguments']
         # debug("pandoc_arguments: " + str(pandoc_arguments))
         pandoc_arguments = evaluate_short_long_arguments(pandoc_arguments)
         # debug("pandoc_arguments: " + str(pandoc_arguments))
 
-        # append the file name to the pandoc command
-        pandoc_cmd.extend([file_name_with_ext])
 
-
-        # # input_format / `--from` parameter
-        # input_format = pandoc_arguments.get(short=['f', 'r'], long=['from', 'read'])
-        # if input_format is None:
-        #     sublime.error_message('Could not find Pandocs `--from` argument. Do you have set the `--from` argument inside the `pandoc-arguments` array in the settings?')
-        # # debug("input_format: " + str(input_format))
+        # output_format / `--to` parameter
+        output_format = pandoc_arguments.get(short=['t', 'w'], long=['to', 'write'])
+        if output_format is None:
+            sublime.error_message('Could not find Pandocs `--to` argument. Do you have set the `--to` argument inside the `pandoc-arguments` array in the settings?')
+        # debug("output_format: " + str(output_format))
 
         # input_format / `--from` parameter
         score = 0
@@ -127,18 +116,6 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         if input_format is None:
             sublime.error_message('Could not find Pandocs `--from` argument. Do you have set the scopes dictionary in the settings?')
         # debug("input_format: " + str(input_format))
-
-        # add the pandoc's `--from` parameter to the pandocs command
-        pandoc_cmd.extend(['-f', input_format])
-        # debug("pandoc_cmd: " + str(pandoc_cmd))
-
-
-
-        # output_format / `--to` parameter
-        output_format = pandoc_arguments.get(short=['t', 'w'], long=['to', 'write'])
-        if output_format is None:
-            sublime.error_message('Could not find Pandocs `--to` argument. Do you have set the `--to` argument inside the `pandoc-arguments` array in the settings?')
-        # debug("output_format: " + str(output_format))
 
 
         # Display Result in Buffer (Buffer not yet implemented) or write to a file?
@@ -155,48 +132,108 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
                 # pandoc_arguments.extend(['-o', output_name])
 
 
-        # Use output_format as file output_extension, unless otherwise specified in the output_extension parameter
+        # use output_extension as specified in the output_extension parameter,
+        # if it is not specified or blank, use output_format as from the file output_extension,
         try:
             transformation['output_extension']
         except:
             output_extension = output_format
         else:
             output_extension = transformation['output_extension']
-        debug("output_extension: " + str(output_extension))
+        # debug("output_extension: " + str(output_extension))
+
 
         # add the output_extension to the name
         output_name_with_ext = output_name + "." + output_extension
-        debug("output_name_with_ext: " + str(output_name_with_ext))
+        # debug("output_name_with_ext: " + str(output_name_with_ext))
+
+
+        # Optional: execute the pp preprocessor before executing pandoc, see: http://cdsoft.fr/pp/
+        # this is activated with the `use_pp=true` keyword in the settings:
+
+        try:
+            transformation['use_pp']
+        except:
+            use_pp = False
+        else:
+            use_pp = transformation['use_pp']
+        debug("use_pp: " + str(use_pp))
+
+        if use_pp is True:
+            # this pandoc_cmd is the command, which will be later passed to pp
+            # it is first constructed as a normal python list and then converted into a connected string
+            pp_cmd = ['pp']
+
+            # use the output extension as a symbol (for referencing)
+            pp_cmd.extend(['-D', output_extension])
+
+            # append the name of the source file on which pp will be run
+            pp_cmd.extend([file_name_with_ext])
+
+            # the result will be written to an intermediate file with this constructed name:
+            pp_file_name_with_ext = str(file_name)+str("_pp_")+str(output_extension)+str(input_extension)
+            pp_cmd.extend(['>', pp_file_name_with_ext])
+
+            pp_cmd = ' '.join(pp_cmd)
+
+            debug("pp_cmd: " + str(pp_cmd))
+
+            process_pp = subprocess.Popen(pp_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
+
+
+            # now use the outputted file from pp for use in pandoc!
+
+
+        # this pandoc_cmd is the command, which will be later passed to pandoc
+        # it is first constructed as a normal python list and then converted into a connected string
+        # the pandoc_cmd will be outputted to the console and should be used in the CLI as normal
+        pandoc_cmd = [pandoc_path]
+
+        # append the file name to the pandoc command
+        if use_pp is True:
+            pandoc_cmd.extend([pp_file_name_with_ext])
+        else:
+            pandoc_cmd.extend([file_name_with_ext])
+        # debug("pp_cmd: " + str(pp_cmd))
+
+
+        # add the pandoc's `--from` parameter to the pandocs command
+        pandoc_cmd.extend(['-f', input_format])
+        # debug("pandoc_cmd: " + str(pandoc_cmd))
+
 
         # add the output_name_with_ext to the pandoc command
         pandoc_arguments.extend(['-o', output_name_with_ext])
 
-
-        # add all othern pandoc arguments to the pandoc command!
+        # add all other pandoc arguments to the pandoc command!
         pandoc_cmd.extend(pandoc_arguments)
 
+        # this section is for the buffer functionality, not yet implemented!
         # string to work with (gets the whole file as text in buffer; selects the whole file)
         region = sublime.Region(0, view.size())
         # debug("region: " + str(region))
         contents = view.substr(region)
         # debug("contents: " + str(contents))
 
-        # write pandoc command to console
+        # join the list of commands to one (string) command
         pandoc_cmd = ' '.join(pandoc_cmd)
+        # write pandoc command to console
         debug("pandoc_cmd: " + str(pandoc_cmd))
 
+
         # Pass the pandoc_cmd to Pandoc and run Pandoc in async mode
-        sublime.set_timeout_async(lambda: self.pass_to_pandoc(pandoc_cmd, folder_path, contents, output_format, transformation, output_name_with_ext), 0)
+        sublime.set_timeout_async(lambda: self.pass_to_pandoc(pandoc_cmd, folder_path, output_format, transformation, output_name_with_ext), 0)
 
+        # contents,
 
-
-    def pass_to_pandoc(self, pandoc_cmd, folder_path, contents, output_format, transformation, output_name):
+    def pass_to_pandoc(self, pandoc_cmd, folder_path, output_format, transformation, output_name):
 
         process = subprocess.Popen(pandoc_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
 
-        # Next line always waits for the output (buffering)
+        # Next line always waits for the output (buffering) but this is not a problem (no locking here) because this is in async mode (new thread)
         # if there is an result pandoc has put the conversion in stdout, when result is empty it has written to a file
-        result, error = process.communicate(contents.encode('utf-8'))
+        result, error = process.communicate()
+        # result, error = process.communicate(contents.encode('utf-8'))
 
         # Handle Pandoc errors
         if error:
@@ -419,7 +456,7 @@ def load_folder_settings_file(folder_settings_file):
         except (KeyError, ValueError) as e:
             sublime.error_message("JSON Error: Cannot parse spandoc.json. See console for details. Exception: " + str(e))
             return None
-        debug("settings_file: " + str(settings_file))
+        # debug("settings_file: " + str(settings_file))
 
     return settings_file
 

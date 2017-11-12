@@ -27,8 +27,10 @@
         // given scope, this transformation becomes available
         // notice the use of non-pandoc-extension inside the scope (http://pandoc.org/MANUAL.html#non-pandoc-extensions)
         "scope": {"text.html.markdown": "markdown+tex_math_single_backslash"},
-        // optional: specifiy output extension, othwise it will be taken from the --to parameter
-        // "output_extension": "html",
+        // optional: specifiy output extension, othwise (when leaving blank) it will be taken from the --to parameter
+        "output_extension": "",
+        // optional: use the preprocessor pp:
+        "use_pp": false,
         "pandoc-arguments": [
           // the parameter --to is a must:
           "--to=html",
