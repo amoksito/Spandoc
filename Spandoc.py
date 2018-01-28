@@ -224,7 +224,6 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         # Pass the pandoc_cmd to Pandoc and run Pandoc in async mode
         sublime.set_timeout_async(lambda: self.pass_to_pandoc(pandoc_cmd, folder_path, output_format, transformation, output_name_with_ext), 0)
 
-        # contents,
 
     def pass_to_pandoc(self, pandoc_cmd, folder_path, output_format, transformation, output_name):
 
@@ -272,6 +271,14 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
 
         # Output Status message done:
         sublime.status_message("Spandoc DONE")
+
+
+        # open automatically with the sublime text plugin "view in browser"
+        # self.window.run_command('view_in_browser')
+        # window().run_command("view_in_browser")
+        # view.run_command("view_in_browser")
+        # self.view.window().run_command("save")
+
 
 
 class evaluate_short_long_arguments(list):
