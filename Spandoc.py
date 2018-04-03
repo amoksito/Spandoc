@@ -3,6 +3,7 @@ import sublime_plugin
 from collections import OrderedDict
 # import pprint
 import re
+import time
 import subprocess
 # import tempfile
 import os
@@ -180,8 +181,7 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
 
             process_pp = subprocess.Popen(pp_cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=folder_path)
 
-
-            # now use the outputted file from pp for use in pandoc!
+            # now use the outputted file from pp for use in pandoc!:
 
 
         # this pandoc_cmd is the command, which will be later passed to pandoc
@@ -194,12 +194,10 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
             pandoc_cmd.extend([pp_file_name_with_ext])
         else:
             pandoc_cmd.extend([file_name_with_ext])
-        # debug("pp_cmd: " + str(pp_cmd))
 
 
         # add the pandoc's `--from` parameter to the pandocs command
         pandoc_cmd.extend(['-f', input_format])
-        # debug("pandoc_cmd: " + str(pandoc_cmd))
 
 
         # add the output_name_with_ext to the pandoc command
@@ -220,6 +218,9 @@ class SpandocRunCommand(sublime_plugin.WindowCommand):
         # write pandoc command to console
         debug("pandoc_cmd: " + str(pandoc_cmd))
 
+        if use_pp is True:
+            # execute pandoc only when pp is finished
+            process_pp.communicate()
 
         # Pass the pandoc_cmd to Pandoc and run Pandoc in async mode
         sublime.set_timeout_async(lambda: self.pass_to_pandoc(pandoc_cmd, folder_path, output_format, transformation, output_name_with_ext), 0)
