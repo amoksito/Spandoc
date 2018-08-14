@@ -1,5 +1,7 @@
 # __Spandoc__ — Pandoc inside Sublime
 
+__Unfortunately, I moved to Atom as my primary text editor. So treat this plugin as abandoned. But feel free to fork it.__
+
 A [Sublime Text](https://www.sublimetext.com/) plugin that uses the infamous open-source parser [Pandoc](http://pandoc.org/) to convert text in nearly every possible format into each other.
 With Pandoc you can use the most evolved Markdown implementation: [Pandoc's Markdown](http://pandoc.org/MANUAL.html#pandocs-markdown) and with __Spandoc__ you can use it inside Sublime Text!
 
@@ -153,4 +155,3 @@ You can even execute the internal command: `spandoc_run` with a keybinding, pass
 Contributing notes will follow.
 Code of Conduct will follow.
 No Sublime 2 support
-
